@@ -21,7 +21,7 @@ const Index = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const handleExportJSON = () => {
-    const dataStr = JSON.stringify({ data: bmcData, canvasColor, defaultItemColor, title: canvasTitle }, null, 2);
+    const dataStr = JSON.stringify({ data: bmcData, canvasColor, defaultItemColor, title: canvasTitle, titleColor, sectionTitleColor }, null, 2);
     const dataBlob = new Blob([dataStr], { type: "application/json" });
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement("a");
@@ -106,6 +106,8 @@ const Index = () => {
       if (data.canvasColor) setCanvasColor(data.canvasColor);
       if (data.defaultItemColor) setDefaultItemColor(data.defaultItemColor);
       if (data.title) setCanvasTitle(data.title);
+      if (data.titleColor) setTitleColor(data.titleColor);
+      if (data.sectionTitleColor) setSectionTitleColor(data.sectionTitleColor);
 
       toast.success(t("canvasImported"));
     }
@@ -138,6 +140,8 @@ const Index = () => {
           if (data.canvasColor) setCanvasColor(data.canvasColor);
           if (data.defaultItemColor) setDefaultItemColor(data.defaultItemColor);
           if (data.title) setCanvasTitle(data.title);
+          if (data.titleColor) setTitleColor(data.titleColor);
+          if (data.sectionTitleColor) setSectionTitleColor(data.sectionTitleColor);
 
           const id = `toast-shared-load-${Date.now()}`;
           let successMsg = t("sharedCanvasLoaded");
@@ -146,11 +150,40 @@ const Index = () => {
           }
           toast.success(successMsg, { id });
         }
+        return; // stop: we loaded from shared link
+      }
+      // No shared link — attempt to restore from localStorage autosave
+      try {
+        const saved = localStorage.getItem("bmc_autosave");
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (data) {
+            if (data.data) setBmcData(data.data);
+            if (data.canvasColor) setCanvasColor(data.canvasColor);
+            if (data.defaultItemColor) setDefaultItemColor(data.defaultItemColor);
+            if (data.title) setCanvasTitle(data.title);
+            if (data.titleColor) setTitleColor(data.titleColor);
+            if (data.sectionTitleColor) setSectionTitleColor(data.sectionTitleColor);
+            toast.success("Restored saved canvas");
+          }
+        }
+      } catch (err) {
+        // ignore parse/storage errors
       }
     } catch (e) {
       // ignore
     }
   }, []);
+
+  // Autosave relevant canvas state to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      const payload = { data: bmcData, canvasColor, defaultItemColor, title: canvasTitle, titleColor, sectionTitleColor };
+      localStorage.setItem("bmc_autosave", JSON.stringify(payload));
+    } catch (err) {
+      // ignore storage errors (e.g. quota)
+    }
+  }, [bmcData, canvasColor, defaultItemColor, canvasTitle, titleColor, sectionTitleColor]);
 
   const handleShareLink = async () => {
     try {
@@ -166,7 +199,7 @@ const Index = () => {
         });
       });
 
-      const payload = { data: cleanedData, canvasColor, defaultItemColor, title: canvasTitle, imagesRemoved };
+      const payload = { data: cleanedData, canvasColor, defaultItemColor, title: canvasTitle, titleColor, sectionTitleColor, imagesRemoved };
       const json = JSON.stringify(payload);
       // base64 encode the json safely
       const base64 = typeof window === "undefined" ? Buffer.from(json).toString("base64") : btoa(unescape(encodeURIComponent(json)));
@@ -313,6 +346,14 @@ const Index = () => {
               setCanvasTitle(t("clickToEditTitle"));
               setCanvasColor("#f5f3ed");
               setDefaultItemColor("#9dc8ac");
+              setTitleColor("#1f2937");
+              setSectionTitleColor("#374151");
+              // clear autosaved state in localStorage
+              try {
+                localStorage.removeItem("bmc_autosave");
+              } catch (err) {
+                // ignore
+              }
               toast.success(t("canvasCleared"));
             }}
           >
