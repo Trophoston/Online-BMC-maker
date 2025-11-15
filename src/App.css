@@ -40,3 +40,17 @@
 .read-the-docs {
   color: #888;
 }
+
+/*
+Source - https://stackoverflow.com/a
+Posted by Hristo Eftimov, modified by community. See post 'Timeline' for change history
+Retrieved 2025-11-16, License - CC BY-SA 4.0
+*/
+
+.item-scroll-hide {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox, Safari 18.2+, Chromium 121+ */
+}
+.item-scroll-hide::-webkit-scrollbar { 
+    display: none;  /* Older Safari and Chromium */
+}

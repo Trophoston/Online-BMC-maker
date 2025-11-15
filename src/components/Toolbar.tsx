@@ -77,7 +77,21 @@ export const Toolbar = ({
             try {
               const url = await onShareLink();
               if (url && typeof url === "string") {
-                toast.success(t("shareLinkCopied"));
+                if ((navigator as any).share) {
+                  try {
+                    await (navigator as any).share({ title: t("title"), url });
+                    // navigator.share may not give feedback; show a confirmation
+                    // if have cut image 
+                    if (url.includes("imagesRemoved=true")) {
+                      toast.success(t("shareLinkCopiedImagesRemoved"));
+                    }else{
+                      return t("shareLinkCopied");
+                    }
+                  } catch (err) {
+                    
+                  }
+                } else {
+                }
               }
             } catch (e) {
               console.error(e);
@@ -115,16 +129,16 @@ export const Toolbar = ({
             {t("colors")}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="lg:w-full md:w-[100vw]">
+        <PopoverContent className="md:w-full sm:w-[100vw]">
           <div className="flex gap-5 items-center justify-evenly flex-wrap">
             <div>
               <Label className="mb-2 block">{t("canvasColor")}</Label>
               <HexColorPicker color={canvasColor} onChange={onCanvasColorChange} />
             </div>
-            <div>
+            {/* <div>
               <Label className="mb-2 block">{t("itemColor")}</Label>
               <HexColorPicker color={itemColor} onChange={onItemColorChange} />
-            </div>
+            </div> */}
             <div>
               <Label className="mb-2 block">{t("titleColor")}</Label>
               <HexColorPicker color={titleColor || "#000000"} onChange={(c) => onTitleColorChange?.(c)} />
@@ -135,7 +149,7 @@ export const Toolbar = ({
             </div>
           </div>
 
-          <p className="pt-3 md:hidden block">if this color setting is not applied correctly try scroll down</p>
+          <p className="pt-3 md:hidden block">{t("colorPickerScrollHint")}</p>
         </PopoverContent>
       </Popover>
 

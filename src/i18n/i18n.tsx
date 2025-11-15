@@ -1,3 +1,4 @@
+import { color } from "html2canvas/dist/types/css/types/color";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 type Lang = "en" | "th";
@@ -25,11 +26,13 @@ const translations: Record<Lang, Record<string, string>> = {
     canvasExportedPDF: "Canvas exported as PDF",
     canvasExportedPNG: "Canvas exported as PNG",
     canvasImported: "Canvas imported successfully",
-    sharedCanvasLoaded: "Shared canvas loaded",
-    shareLinkCopied: "Share link copied",
-    shareLinkCopiedImagesRemoved: "Share link copied — images were removed from the shared link to keep the URL short.",
+    sharedCanvasLoaded: "Shared canvas loaded", 
+    sharedCanvasLoadedImagesRemoved: "Shared canvas loaded - images were removed from the shared link to keep the URL short.", 
+    shareLinkCopied: "Share link successfully",
+    shareLinkCopiedImagesRemoved: "Share link successfully — images were removed from the shared link to keep the URL short.",
     failedShare: "Failed to create share link",
     canvasCleared: "Canvas cleared",
+    noPersistenceWarning: "Note: this site will not save your work if you leave the page.",
     generatingPDF: "Generating PDF...",
     generatingPNG: "Generating PNG...",
     openedNewCanvas: "Opened new canvas in a new tab",
@@ -58,13 +61,17 @@ const translations: Record<Lang, Record<string, string>> = {
     textColor: "Text Color",
     cancel: "Cancel",
     save: "Save",
+    delete: "Delete",
+    confirmDelete: "Are you sure you want to delete this item?",
+    // if this color setting is not applied correctly try scroll down
+    colorPickerScrollHint: "if this color setting is not applied correctly try scroll down",
   },
   th: {
     title: "สร้าง BMC",
     subtitle: "สร้างและส่งออก Business Model Canvas ของคุณ",
     exportJSON: "ส่งออก JSON",
     importJSON: "นำเข้า JSON",
-    shareLink: "คัดลอกลิงก์แชร์",
+    shareLink: "แชร์",
     saveAsPDF: "บันทึกเป็น PDF",
     saveAsPNG: "บันทึกเป็น PNG",
     colors: "สี",
@@ -80,10 +87,12 @@ const translations: Record<Lang, Record<string, string>> = {
     canvasExportedPNG: "ส่งออกแคนวาสเป็น PNG แล้ว",
     canvasImported: "นำเข้าแคนวาสเรียบร้อยแล้ว",
     sharedCanvasLoaded: "โหลดแคนวาสที่แชร์แล้ว",
-    shareLinkCopied: "คัดลอกลิงก์แชร์แล้ว",
-    shareLinkCopiedImagesRemoved: "คัดลอกลิงก์แชร์แล้ว — รูปภาพถูกตัดออกเพื่อให้ลิงก์สั้นลง",
+    sharedCanvasLoadedImagesRemoved: "โหลดแคนวาสที่แชร์แล้ว — รูปภาพถูกตัดออกเพื่อให้ลิงก์สั้นลง.",
+    shareLinkCopied: "แชร์แล้ว",
+    shareLinkCopiedImagesRemoved: "แชร์แล้ว — รูปภาพถูกตัดออกเพื่อให้ลิงก์สั้นลง",
     failedShare: "สร้างลิงก์แชร์ไม่สำเร็จ",
     canvasCleared: "ล้างแคนวาสเรียบร้อยแล้ว",
+    noPersistenceWarning: "หมายเหตุ: เว็บไซต์นี้จะไม่บันทึกงานของคุณหากคุณออกจากหน้า",
     generatingPDF: "กำลังสร้าง PDF...",
     generatingPNG: "กำลังสร้าง PNG...",
     openedNewCanvas: "เปิดแผ่นใหม่ในแท็บใหม่แล้ว",
@@ -112,6 +121,9 @@ const translations: Record<Lang, Record<string, string>> = {
     textColor: "สีข้อความ",
     cancel: "ยกเลิก",
     save: "บันทึก",
+    delete: "ลบ",
+    confirmDelete: "คุณแน่ใจหรือไม่ว่าต้องการลบไอเท็มนี้?",
+    colorPickerScrollHint: "หากหน้าการตั้งค่าสีนี้ผิดปกติ ลองเลื่อนลง",
   },
 };
 

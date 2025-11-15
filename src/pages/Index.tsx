@@ -146,44 +146,37 @@ const Index = () => {
           const id = `toast-shared-load-${Date.now()}`;
           let successMsg = t("sharedCanvasLoaded");
           if (data.imagesRemoved) {
-            successMsg = t("shareLinkCopiedImagesRemoved");
+            successMsg = t("sharedCanvasLoadedImagesRemoved");
           }
           toast.success(successMsg, { id });
         }
         return; // stop: we loaded from shared link
       }
-      // No shared link — attempt to restore from localStorage autosave
+      // No shared link — warn user that data will not be persisted when leaving
       try {
-        const saved = localStorage.getItem("bmc_autosave");
-        if (saved) {
-          const data = JSON.parse(saved);
-          if (data) {
-            if (data.data) setBmcData(data.data);
-            if (data.canvasColor) setCanvasColor(data.canvasColor);
-            if (data.defaultItemColor) setDefaultItemColor(data.defaultItemColor);
-            if (data.title) setCanvasTitle(data.title);
-            if (data.titleColor) setTitleColor(data.titleColor);
-            if (data.sectionTitleColor) setSectionTitleColor(data.sectionTitleColor);
-            toast.success("Restored saved canvas");
-          }
-        }
+        // show a one-time alert informing users that the site doesn't persist data
+        // use a browser alert for simplicity; translation key below
+
+
+
+
+
+
+
+
+
+
+
+        // window.onbeforeunload = () => t("noPersistenceWarning");
       } catch (err) {
-        // ignore parse/storage errors
+        // ignore
       }
     } catch (e) {
       // ignore
     }
   }, []);
 
-  // Autosave relevant canvas state to localStorage whenever it changes
-  useEffect(() => {
-    try {
-      const payload = { data: bmcData, canvasColor, defaultItemColor, title: canvasTitle, titleColor, sectionTitleColor };
-      localStorage.setItem("bmc_autosave", JSON.stringify(payload));
-    } catch (err) {
-      // ignore storage errors (e.g. quota)
-    }
-  }, [bmcData, canvasColor, defaultItemColor, canvasTitle, titleColor, sectionTitleColor]);
+  // No autosave: users are warned on load that data won't persist if they leave the page.
 
   const handleShareLink = async () => {
     try {
@@ -198,24 +191,39 @@ const Index = () => {
           return rest;
         });
       });
-
       const payload = { data: cleanedData, canvasColor, defaultItemColor, title: canvasTitle, titleColor, sectionTitleColor, imagesRemoved };
       const json = JSON.stringify(payload);
       // base64 encode the json safely
       const base64 = typeof window === "undefined" ? Buffer.from(json).toString("base64") : btoa(unescape(encodeURIComponent(json)));
       const url = `${window.location.origin}${window.location.pathname}?bmc=${encodeURIComponent(base64)}`;
 
+      // Prefer native share on supporting mobile browsers
+      if ((navigator as any).share) {
+        try {
+          await (navigator as any).share({ title: canvasTitle || t("title"), text: canvasTitle || "", url });
+          // show a small confirmation; clipboard is optional since native share delivered the link
+          console.log('url', url);
+
+          if (imagesRemoved) {
+            toast.success(t("shareLinkCopiedImagesRemoved"));
+          } else {
+            toast.success(t("shareLinkCopied"));
+          }
+          return url;
+        } catch (err) {
+          // share rejected / failed (user cancelled or platform error) — fall back to clipboard below
+        }
+      }
+
+      // Fallback: copy to clipboard and return URL
       await navigator.clipboard.writeText(url);
-
-
-
-      // Note: toolbar will show the simple "Share link copied" toast; only surface the images-removed
-      // condition as a success so it's shown alongside the copy confirmation.
-      if (imagesRemoved) {
+      console.log('url', url);
+      if (url.includes("imagesRemoved=true")) {
         toast.success(t("shareLinkCopiedImagesRemoved"));
       } else {
-        return url;
+        toast.success(t("shareLinkCopied"));
       }
+      return url;
 
 
     } catch (err) {
@@ -301,7 +309,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background sm:p-8 py-8 px-2">
       <div className="max-w-[1800px] mx-auto space-y-6">
 
 
@@ -342,18 +350,9 @@ const Index = () => {
             variant="destructive"
             size="sm"
             onClick={() => {
-              setBmcData({});
-              setCanvasTitle(t("clickToEditTitle"));
-              setCanvasColor("#f5f3ed");
-              setDefaultItemColor("#9dc8ac");
-              setTitleColor("#1f2937");
-              setSectionTitleColor("#374151");
-              // clear autosaved state in localStorage
-              try {
-                localStorage.removeItem("bmc_autosave");
-              } catch (err) {
-                // ignore
-              }
+              const url = `${window.location.origin}`;
+              window.location.href = url;
+              // No local autosave to clear; data is not persisted across sessions
               toast.success(t("canvasCleared"));
             }}
           >

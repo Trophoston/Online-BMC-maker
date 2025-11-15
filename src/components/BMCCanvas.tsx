@@ -34,7 +34,7 @@ const EditableTitle = ({
   const title = propTitle ?? t("clickToEditTitle");
 
   return (
-    <div className="absolute top-5 left-6 z-20">
+    <div className="absolute top-5 left-6 z-20 p-5">
       {editing ? (
         <input
           ref={inputRef}
@@ -45,12 +45,12 @@ const EditableTitle = ({
               finishAndSave((e.target as HTMLInputElement).value);
             }
           }}
-          className="w-full bg-transparent border-none outline-none text-2xl md:text-3xl lg:text-4xl font-bold text-muted-foreground"
+          className="sm:w-[50vw] w-full bg-transparent border-none outline-none text-2xl md:text-3xl lg:text-4xl font-bold text-muted-foreground"
           style={{ color: titleColor || undefined }}
         />
       ) : (
         <h1
-          className="text-2xl md:text-3xl lg:text-4xl font-bold text-muted-foreground cursor-text"
+          className="text-2xl md:text-3xl lg:text-4xl font-bold text-muted-foreground cursor-text max-w-[90vw]"
           onClick={startEdit}
           style={{ color: titleColor || undefined }}
         >
@@ -143,7 +143,8 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
         title: itemData.title || "",
         description: itemData.description || "",
         imageUrl: itemData.imageUrl,
-        color: itemData.color || defaultItemColor,
+          color: itemData.color || defaultItemColor,
+          textColor: itemData.textColor || "#000000",
       };
       newData[currentSection].push(newItem);
     }
@@ -155,12 +156,12 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
     <>
       <div
         style={{ backgroundColor: canvasColor }}
-        className="pt-24 relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 lg:grid-rows-3 gap-4 p-6 rounded-xl shadow-lg"
+        className="pt-28 relative grid grid-cols-1 md:grid-cols-2a md:grid-cols-5 md:grid-rows-3 gap-4 sm:px-6 px-3 pb-6 rounded-xl shadow-lg"
       >
         {/* Editable canvas title (click to edit) - fixed top-left H1 */}
         <EditableTitle title={title} onTitleChange={onTitleChange} titleColor={titleColor} />
         {/* Left tall: 5. Key Partnerships (col1, row 1-2) */}
-        <div className="col-span-1 lg:col-start-1 lg:row-start-1 lg:row-span-2 min-h-[250px] lg:min-h-[520px]">
+        <div className="col-span-1 md:col-start-1 md:row-start-1 md:row-span-2 min-h-[250px] md:min-h-[520px]">
           <BMCSection
             title={sections[0].title}
             icon={sections[0].icon}
@@ -175,7 +176,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
           />
         </div>
         {/* Col 2 top: 6. Key Activities */}
-        <div className="col-span-1 lg:col-start-2 lg:row-start-1 min-h-[200px] lg:min-h-[250px]">
+        <div className="col-span-1 md:col-start-2 md:row-start-1 min-h-[200px] md:min-h-[250px]">
           <BMCSection
             title={sections[1].title}
             icon={sections[1].icon}
@@ -191,7 +192,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
         </div>
 
         {/* Col 2 bottom: 7. Key Resources */}
-        <div className="col-span-1 lg:col-start-2 lg:row-start-2 min-h-[200px] lg:min-h-[250px]">
+        <div className="col-span-1 md:col-start-2 md:row-start-2 min-h-[200px] md:min-h-[250px]">
           <BMCSection
             title={sections[5].title}
             icon={sections[5].icon}
@@ -207,7 +208,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
         </div>
 
         {/* Center tall: 1. Value Proposition (col3, rows 1-2) */}
-        <div className="col-span-1 lg:col-start-3 lg:row-start-1 lg:row-span-2 min-h-[250px] lg:min-h-[520px]">
+        <div className="col-span-1 md:col-start-3 md:row-start-1 md:row-span-2 min-h-[250px] md:min-h-[520px]">
           <BMCSection
             title={sections[2].title}
             icon={sections[2].icon}
@@ -223,7 +224,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
         </div>
 
         {/* Col 4 top: 3. Customer Relationships */}
-        <div className="col-span-1 lg:col-start-4 lg:row-start-1 min-h-[200px] lg:min-h-[250px]">
+        <div className="col-span-1 md:col-start-4 md:row-start-1 min-h-[200px] md:min-h-[250px]">
           <BMCSection
             title={sections[3].title}
             icon={sections[3].icon}
@@ -239,7 +240,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
         </div>
 
         {/* Col 4 bottom: 4. Distribution Channels */}
-        <div className="col-span-1 lg:col-start-4 lg:row-start-2 min-h-[200px] lg:min-h-[250px]">
+        <div className="col-span-1 md:col-start-4 md:row-start-2 min-h-[200px] md:min-h-[250px]">
           <BMCSection
             title={sections[7].title}
             icon={sections[7].icon}
@@ -255,7 +256,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
         </div>
 
         {/* Right tall: 2. Customers (col5, rows 1-2) */}
-        <div className="col-span-1 lg:col-start-5 lg:row-start-1 lg:row-span-2 min-h-[250px] lg:min-h-[520px]">
+        <div className="col-span-1 md:col-start-5 md:row-start-1 md:row-span-2 min-h-[250px] md:min-h-[520px]">
           <BMCSection
             title={sections[4].title}
             icon={sections[4].icon}
@@ -271,7 +272,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
         </div>
 
         {/* Bottom left: 8. Budget Cost (col1-2) */}
-        <div className="col-span-1 md:col-span-2 lg:col-span-2 lg:col-start-1 lg:row-start-3 min-h-[160px] lg:min-h-[200px]">
+        <div className="col-span-1 md:col-span-2 md:col-start-1 md:row-start-3 min-h-[160px] md:min-h-[200px]">
           <BMCSection
             title={sections[6].title}
             icon={sections[6].icon}
@@ -287,7 +288,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
         </div>
 
         {/* Bottom right: 9. Revenue Streams (col3-5) */}
-        <div className="col-span-1 md:col-span-2 lg:col-span-3 lg:col-start-3 lg:row-start-3 min-h-[160px] lg:min-h-[200px]">
+        <div className="col-span-1 md:col-span-3 md:col-start-3 md:row-start-3 min-h-[160px] md:min-h-[200px]">
           <BMCSection
             title={sections[8].title}
             icon={sections[8].icon}
@@ -307,6 +308,10 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         onSave={handleSaveItem}
+        onDelete={(id: string) => {
+          if (!currentSection) return;
+          handleDeleteItem(currentSection, id);
+        }}
         item={editingItem}
         defaultColor={defaultItemColor}
       />

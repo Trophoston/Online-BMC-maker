@@ -13,11 +13,12 @@ interface ItemDialogProps {
   open: boolean;
   onClose: () => void;
   onSave: (item: Partial<BMCItem>) => void;
+  onDelete?: (id: string) => void;
   item?: BMCItem | null;
   defaultColor: string;
 }
 
-export const ItemDialog = ({ open, onClose, onSave, item, defaultColor }: ItemDialogProps) => {
+export const ItemDialog = ({ open, onClose, onSave, onDelete, item, defaultColor }: ItemDialogProps) => {
   const { t } = useI18n();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -33,8 +34,8 @@ export const ItemDialog = ({ open, onClose, onSave, item, defaultColor }: ItemDi
       setTitle(item?.title || "");
       setDescription(item?.description || "");
       setImageUrl(item?.imageUrl || "");
-      setColor(item?.color || defaultColor);
-      setTextColor(item?.textColor || "#000000");
+      setColor(item?.color || "#6aaf8c");
+      setTextColor(item?.textColor || "#fff");
     }
   }, [open, item, defaultColor]);
 
@@ -94,11 +95,11 @@ export const ItemDialog = ({ open, onClose, onSave, item, defaultColor }: ItemDi
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl w-[90vw] max-h-[90vh] overflow-y-auto rounded-lg">
         <DialogHeader>
           <DialogTitle>{item ? t("editItem") : t("addNewItem")}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-4" style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}>
           <div>
             <Label htmlFor="title">{t("field_title")}</Label>
             <Input
@@ -122,7 +123,7 @@ export const ItemDialog = ({ open, onClose, onSave, item, defaultColor }: ItemDi
 
           <div>
             <Label>Image</Label>
-            <div className="flex gap-2 mt-2">
+            <div className="flex flex-wrap gap-2 mt-2">
               <Button
                 type="button"
                 variant="outline"
@@ -168,12 +169,12 @@ export const ItemDialog = ({ open, onClose, onSave, item, defaultColor }: ItemDi
             )}
             {imageUrl && (
               <div className="mt-2">
-                <img src={imageUrl} alt="Preview" className="w-full h-32 object-cover rounded" />
+                <img src={imageUrl} alt="Preview" className="w-full h-80 object-cover rounded" />
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
             <div>
               <Label>{t("backgroundColor")}</Label>
               <div className="mt-2">
@@ -188,7 +189,21 @@ export const ItemDialog = ({ open, onClose, onSave, item, defaultColor }: ItemDi
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex flex-wrap justify-end gap-2 pt-4">
+            {item && (
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  const confirmed = window.confirm(t("confirmDelete") || "Are you sure?");
+                  if (confirmed) {
+                    onDelete?.(item.id);
+                    handleClose();
+                  }
+                }}
+              >
+                {t("delete")}
+              </Button>
+            )}
             <Button variant="outline" onClick={handleClose}>
               {t("cancel")}
             </Button>
