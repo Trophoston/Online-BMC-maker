@@ -167,7 +167,13 @@ const Index = () => {
 
 
 
-        // window.onbeforeunload = () => t("noPersistenceWarning");
+        window.onbeforeunload = () => t("noPersistenceWarning");
+
+
+
+
+
+        
       } catch (err) {
         // ignore
       }
