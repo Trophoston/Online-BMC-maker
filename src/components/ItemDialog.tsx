@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useI18n } from "@/i18n/i18n";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +18,7 @@ interface ItemDialogProps {
 }
 
 export const ItemDialog = ({ open, onClose, onSave, item, defaultColor }: ItemDialogProps) => {
+  const { t } = useI18n();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -94,26 +96,26 @@ export const ItemDialog = ({ open, onClose, onSave, item, defaultColor }: ItemDi
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{item ? "Edit Item" : "Add New Item"}</DialogTitle>
+          <DialogTitle>{item ? t("editItem") : t("addNewItem")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">{t("field_title")}</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter title..."
+              placeholder={t("placeholder_title")}
             />
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t("field_description")}</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter description..."
+              placeholder={t("placeholder_description")}
               rows={3}
             />
           </div>
@@ -128,7 +130,7 @@ export const ItemDialog = ({ open, onClose, onSave, item, defaultColor }: ItemDi
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Upload File
+                {t("uploadFile")}
               </Button>
               <Button
                 type="button"
@@ -137,7 +139,7 @@ export const ItemDialog = ({ open, onClose, onSave, item, defaultColor }: ItemDi
                 onClick={() => setShowUrlInput(!showUrlInput)}
               >
                 <LinkIcon className="h-4 w-4 mr-2" />
-                URL
+                {t("urlLabel")}
               </Button>
               <Button
                 type="button"
@@ -146,7 +148,7 @@ export const ItemDialog = ({ open, onClose, onSave, item, defaultColor }: ItemDi
                 onClick={handlePaste}
               >
                 <Clipboard className="h-4 w-4 mr-2" />
-                Paste
+                {t("pasteLabel")}
               </Button>
             </div>
             <input
@@ -157,11 +159,11 @@ export const ItemDialog = ({ open, onClose, onSave, item, defaultColor }: ItemDi
               onChange={handleFileUpload}
             />
             {showUrlInput && (
-              <Input
+                <Input
                 className="mt-2"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="Enter image URL..."
+                placeholder={t("enterImageUrl")}
               />
             )}
             {imageUrl && (
@@ -173,13 +175,13 @@ export const ItemDialog = ({ open, onClose, onSave, item, defaultColor }: ItemDi
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Background Color</Label>
+              <Label>{t("backgroundColor")}</Label>
               <div className="mt-2">
                 <HexColorPicker color={color} onChange={setColor} />
               </div>
             </div>
             <div>
-              <Label>Text Color</Label>
+              <Label>{t("textColor")}</Label>
               <div className="mt-2">
                 <HexColorPicker color={textColor} onChange={setTextColor} />
               </div>
@@ -188,10 +190,10 @@ export const ItemDialog = ({ open, onClose, onSave, item, defaultColor }: ItemDi
 
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={handleClose}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button onClick={handleSave} disabled={!title}>
-              Save
+              {t("save")}
             </Button>
           </div>
         </div>

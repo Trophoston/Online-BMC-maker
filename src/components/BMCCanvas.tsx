@@ -2,15 +2,20 @@ import { useState, useRef } from "react";
 import { BMCSection, BMCItem } from "./BMCSection";
 import { ItemDialog } from "./ItemDialog";
 import { User, Activity, Star, Heart, Users, UserPlus, Tag, Wallet, Globe } from "lucide-react";
+import { useI18n } from "@/i18n/i18n";
 
 // Inline editable title component — accepts props so parent can control value
+// Added titleColor prop to EditableTitle
 const EditableTitle = ({
   title: propTitle,
   onTitleChange,
+  titleColor,
 }: {
   title?: string;
   onTitleChange?: (t: string) => void;
+  titleColor?: string;
 }) => {
+  const { t } = useI18n();
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -26,7 +31,7 @@ const EditableTitle = ({
     finishEdit();
   };
 
-  const title = propTitle ?? "Click to edit title";
+  const title = propTitle ?? t("clickToEditTitle");
 
   return (
     <div className="absolute top-5 left-6 z-20">
@@ -41,11 +46,13 @@ const EditableTitle = ({
             }
           }}
           className="w-full bg-transparent border-none outline-none text-2xl md:text-3xl lg:text-4xl font-bold text-muted-foreground"
+          style={{ color: titleColor || undefined }}
         />
       ) : (
         <h1
           className="text-2xl md:text-3xl lg:text-4xl font-bold text-muted-foreground cursor-text"
           onClick={startEdit}
+          style={{ color: titleColor || undefined }}
         >
           {title}
         </h1>
@@ -66,23 +73,26 @@ interface BMCCanvasProps {
   hideAddButton?: boolean;
   title?: string;
   onTitleChange?: (title: string) => void;
+  titleColor?: string;
+  sectionTitleColor?: string;
 }
 
-export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, hideAddButton = false, title, onTitleChange }: BMCCanvasProps) => {
+export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, hideAddButton = false, title, onTitleChange, titleColor, sectionTitleColor }: BMCCanvasProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<BMCItem | null>(null);
+  const { t } = useI18n();
 
   const sections = [
-    { id: "keyPartnerships", title: "5. Key Partnerships", icon: <User className="h-5 w-5" /> },
-    { id: "keyActivities", title: "6. Key Activities", icon: <Activity className="h-5 w-5" /> },
-    { id: "valueProposition", title: "1. Value Proposition", icon: <Star className="h-5 w-5" /> },
-    { id: "customerRelationships", title: "3. Customer Relationships", icon: <Heart className="h-5 w-5" /> },
-    { id: "customers", title: "2. Customers", icon: <Users className="h-5 w-5" /> },
-    { id: "keyResources", title: "7. Key Resources", icon: <UserPlus className="h-5 w-5" /> },
-    { id: "budgetCost", title: "8. Budget Cost", icon: <Tag className="h-5 w-5" /> },
-    { id: "distributionChannels", title: "4. Distribution Channels", icon: <Globe className="h-5 w-5" /> },
-    { id: "revenueStreams", title: "9. Revenue Streams", icon: <Wallet className="h-5 w-5" /> },
+    { id: "keyPartnerships", title: t("sec_keyPartnerships"), icon: <User className="h-5 w-5" /> },
+    { id: "keyActivities", title: t("sec_keyActivities"), icon: <Activity className="h-5 w-5" /> },
+    { id: "valueProposition", title: t("sec_valueProposition"), icon: <Star className="h-5 w-5" /> },
+    { id: "customerRelationships", title: t("sec_customerRelationships"), icon: <Heart className="h-5 w-5" /> },
+    { id: "customers", title: t("sec_customers"), icon: <Users className="h-5 w-5" /> },
+    { id: "keyResources", title: t("sec_keyResources"), icon: <UserPlus className="h-5 w-5" /> },
+    { id: "budgetCost", title: t("sec_budgetCost"), icon: <Tag className="h-5 w-5" /> },
+    { id: "distributionChannels", title: t("sec_distributionChannels"), icon: <Globe className="h-5 w-5" /> },
+    { id: "revenueStreams", title: t("sec_revenueStreams"), icon: <Wallet className="h-5 w-5" /> },
   ];
 
   const handleAddItem = (sectionId: string) => {
@@ -148,7 +158,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
         className="pt-24 relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 lg:grid-rows-3 gap-4 p-6 rounded-xl shadow-lg"
       >
         {/* Editable canvas title (click to edit) - fixed top-left H1 */}
-        <EditableTitle title={title} onTitleChange={onTitleChange} />
+        <EditableTitle title={title} onTitleChange={onTitleChange} titleColor={titleColor} />
         {/* Left tall: 5. Key Partnerships (col1, row 1-2) */}
         <div className="col-span-1 lg:col-start-1 lg:row-start-1 lg:row-span-2 min-h-[250px] lg:min-h-[520px]">
           <BMCSection
@@ -161,6 +171,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             onReorderItems={(items) => handleReorderItems(sections[0].id, items)}
             defaultColor={defaultItemColor}
             hideAddButton={hideAddButton}
+            sectionTitleColor={sectionTitleColor}
           />
         </div>
         {/* Col 2 top: 6. Key Activities */}
@@ -175,6 +186,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             onReorderItems={(items) => handleReorderItems(sections[1].id, items)}
             defaultColor={defaultItemColor}
             hideAddButton={hideAddButton}
+            sectionTitleColor={sectionTitleColor}
           />
         </div>
 
@@ -190,6 +202,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             onReorderItems={(items) => handleReorderItems(sections[5].id, items)}
             defaultColor={defaultItemColor}
             hideAddButton={hideAddButton}
+            sectionTitleColor={sectionTitleColor}
           />
         </div>
 
@@ -205,6 +218,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             onReorderItems={(items) => handleReorderItems(sections[2].id, items)}
             defaultColor={defaultItemColor}
             hideAddButton={hideAddButton}
+            sectionTitleColor={sectionTitleColor}
           />
         </div>
 
@@ -220,6 +234,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             onReorderItems={(items) => handleReorderItems(sections[3].id, items)}
             defaultColor={defaultItemColor}
             hideAddButton={hideAddButton}
+            sectionTitleColor={sectionTitleColor}
           />
         </div>
 
@@ -235,6 +250,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             onReorderItems={(items) => handleReorderItems(sections[7].id, items)}
             defaultColor={defaultItemColor}
             hideAddButton={hideAddButton}
+            sectionTitleColor={sectionTitleColor}
           />
         </div>
 
@@ -250,6 +266,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             onReorderItems={(items) => handleReorderItems(sections[4].id, items)}
             defaultColor={defaultItemColor}
             hideAddButton={hideAddButton}
+            sectionTitleColor={sectionTitleColor}
           />
         </div>
 
@@ -265,6 +282,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             onReorderItems={(items) => handleReorderItems(sections[6].id, items)}
             defaultColor={defaultItemColor}
             hideAddButton={hideAddButton}
+            sectionTitleColor={sectionTitleColor}
           />
         </div>
 
@@ -280,6 +298,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             onReorderItems={(items) => handleReorderItems(sections[8].id, items)}
             defaultColor={defaultItemColor}
             hideAddButton={hideAddButton}
+            sectionTitleColor={sectionTitleColor}
           />
         </div>
       </div>

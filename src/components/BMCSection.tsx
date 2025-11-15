@@ -2,6 +2,7 @@ import { Plus, Edit2, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useI18n } from "@/i18n/i18n";
 
 export interface BMCItem {
   id: string;
@@ -22,6 +23,7 @@ interface BMCSectionProps {
   defaultColor: string;
   hideAddButton?: boolean;
   icon?: ReactNode;
+  sectionTitleColor?: string;
 }
 
 export const BMCSection = ({ 
@@ -34,7 +36,9 @@ export const BMCSection = ({
   defaultColor,
   hideAddButton = false
   , icon
+  , sectionTitleColor
 }: BMCSectionProps) => {
+  const { t } = useI18n();
   const handleDragStart = (e: React.DragEvent, index: number) => {
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', index.toString());
@@ -60,9 +64,9 @@ export const BMCSection = ({
 
   return (
     <div className="h-full flex flex-col border-2 border-border bg-card rounded-lg p-4">
-      <div className="flex items-center gap-3 mb-5">
+        <div className="flex items-center gap-3 mb-5">
         {icon && <span className="text-muted-foreground">{icon}</span>}
-        <h3 className="font-semibold text-sm text-muted-foreground">{title}</h3>
+        <h3 className="font-semibold text-sm text-muted-foreground" style={{ color: sectionTitleColor || undefined }}>{title}</h3>
       </div>
       <div className="flex-1 space-y-2 overflow-auto">
         {items.map((item, index) => (
@@ -120,7 +124,7 @@ export const BMCSection = ({
             onClick={onAddItem}
           >
             <Plus className="h-4 w-4 mr-2" />
-            Add Item
+            {t("addItem")}
           </Button>
         )}
       </div>

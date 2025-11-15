@@ -4,15 +4,19 @@ import { Toolbar } from "@/components/Toolbar";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { toast } from "sonner";
+import { useI18n } from "@/i18n/i18n";
 import { Plus, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const Index = () => {
+  const { t } = useI18n();
   const [bmcData, setBmcData] = useState({});
-  const [canvasTitle, setCanvasTitle] = useState<string>("Click to edit title");
+  const [canvasTitle, setCanvasTitle] = useState<string>(t("clickToEditTitle"));
   const [canvasColor, setCanvasColor] = useState("#f5f3ed");
   const [defaultItemColor, setDefaultItemColor] = useState("#9dc8ac");
+  const [titleColor, setTitleColor] = useState<string>("#1f2937");
+  const [sectionTitleColor, setSectionTitleColor] = useState<string>("#374151");
   const [hideAddButton, setHideAddButton] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -26,7 +30,7 @@ const Index = () => {
     link.click();
     URL.revokeObjectURL(url);
 
-    toast.success("Canvas exported as JSON");
+    toast.success(t("canvasExportedJSON"));
   };
 
   // Create a hidden desktop-styled clone of the canvas so exports on mobile
@@ -103,7 +107,7 @@ const Index = () => {
       if (data.defaultItemColor) setDefaultItemColor(data.defaultItemColor);
       if (data.title) setCanvasTitle(data.title);
 
-      toast.success("Canvas imported successfully");
+      toast.success(t("canvasImported"));
     }
   };
 
@@ -136,9 +140,9 @@ const Index = () => {
           if (data.title) setCanvasTitle(data.title);
 
           const id = `toast-shared-load-${Date.now()}`;
-          let successMsg = "Shared canvas loaded";
+          let successMsg = t("sharedCanvasLoaded");
           if (data.imagesRemoved) {
-            successMsg += " — images were removed to shorten the share link.";
+            successMsg = t("shareLinkCopiedImagesRemoved");
           }
           toast.success(successMsg, { id });
         }
@@ -175,7 +179,7 @@ const Index = () => {
       // Note: toolbar will show the simple "Share link copied" toast; only surface the images-removed
       // condition as a success so it's shown alongside the copy confirmation.
       if (imagesRemoved) {
-        toast.success("Share link copied — images were removed from the shared link to keep the URL short.");
+        toast.success(t("shareLinkCopiedImagesRemoved"));
       } else {
         return url;
       }
@@ -184,7 +188,7 @@ const Index = () => {
     } catch (err) {
       console.error(err);
       const id = `toast-share-fail-${Date.now()}`;
-      toast.error("Failed to create share link");
+      toast.error(t("failedShare"));
     }
   };
 
@@ -192,7 +196,7 @@ const Index = () => {
     if (!canvasRef.current) return;
 
     setHideAddButton(true);
-    const loadingId = toast.loading("Generating PDF...");
+    const loadingId = toast.loading(t("generatingPDF"));
 
     // Wait for state to update
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -222,14 +226,14 @@ const Index = () => {
       targetEl.remove();
     }
     setHideAddButton(false);
-    toast.success("Canvas exported as PDF", { id: loadingId });
+    toast.success(t("canvasExportedPDF") ?? "Canvas exported as PDF", { id: loadingId });
   };
 
   const handleExportPNG = async () => {
     if (!canvasRef.current) return;
 
     setHideAddButton(true);
-    const loadingId = toast.loading("Generating PNG...");
+    const loadingId = toast.loading(t("generatingPNG"));
 
     // Wait for state to update
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -258,7 +262,7 @@ const Index = () => {
           targetEl.remove();
         }
         setHideAddButton(false);
-        toast.success("Canvas exported as PNG", { id: loadingId });
+        toast.success(t("canvasExportedPNG") ?? "Canvas exported as PNG", { id: loadingId });
       }
     });
   };
@@ -269,8 +273,8 @@ const Index = () => {
 
 
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold text-foreground mb-2">BMC MAKER</h1>
-          <p className="text-muted-foreground">Create and export your Business Model Canvas</p>
+          <h1 className="text-5xl font-bold text-foreground mb-2">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
 
         <Toolbar
@@ -283,6 +287,10 @@ const Index = () => {
           onCanvasColorChange={setCanvasColor}
           itemColor={defaultItemColor}
           onItemColorChange={setDefaultItemColor}
+          titleColor={titleColor}
+          onTitleColorChange={setTitleColor}
+          sectionTitleColor={sectionTitleColor}
+          onSectionTitleColorChange={setSectionTitleColor}
         />
 
         <div className="flex flex-wrap gap-2">
@@ -291,10 +299,10 @@ const Index = () => {
             onClick={() => {
               const url = `${window.location.origin}${window.location.pathname}`;
               window.open(url, "_blank");
-              toast.success("Opened new canvas in a new tab");
+              toast.success(t("openedNewCanvas"));
             }}
           ><Plus className="h-4 w-4 " />
-            New Canvas
+            {t("newCanvas")}
           </Button>
 
           <Button
@@ -302,13 +310,13 @@ const Index = () => {
             size="sm"
             onClick={() => {
               setBmcData({});
-              setCanvasTitle("Click to edit title");
+              setCanvasTitle(t("clickToEditTitle"));
               setCanvasColor("#f5f3ed");
               setDefaultItemColor("#9dc8ac");
-              toast.success("Canvas cleared");
+              toast.success(t("canvasCleared"));
             }}
           >
-            Clear
+            {t("clear")}
           </Button>
         </div>
 
@@ -321,6 +329,8 @@ const Index = () => {
             hideAddButton={hideAddButton}
             title={canvasTitle}
             onTitleChange={setCanvasTitle}
+            titleColor={titleColor}
+            sectionTitleColor={sectionTitleColor}
           />
         </div>
       </div>

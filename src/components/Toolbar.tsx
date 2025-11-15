@@ -5,6 +5,7 @@ import { Download, Upload, Save, Palette, FileJson } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { HexColorPicker } from "react-colorful";
 import { Label } from "@/components/ui/label";
+import { useI18n } from "@/i18n/i18n";
 
 interface ToolbarProps {
   onExportJSON: () => void;
@@ -16,6 +17,10 @@ interface ToolbarProps {
   onCanvasColorChange: (color: string) => void;
   itemColor: string;
   onItemColorChange: (color: string) => void;
+  titleColor?: string;
+  onTitleColorChange?: (color: string) => void;
+  sectionTitleColor?: string;
+  onSectionTitleColorChange?: (color: string) => void;
 }
 
 export const Toolbar = ({
@@ -28,8 +33,13 @@ export const Toolbar = ({
   onCanvasColorChange,
   itemColor,
   onItemColorChange,
+  titleColor,
+  onTitleColorChange,
+  sectionTitleColor,
+  onSectionTitleColorChange,
 }: ToolbarProps) => {
   const [showColors, setShowColors] = useState(false);
+  const { lang, setLang, t } = useI18n();
 
   const handleImport = () => {
     const input = document.createElement("input");
@@ -57,7 +67,7 @@ export const Toolbar = ({
     <div className="flex flex-wrap gap-2 p-4 bg-card rounded-lg shadow-md border border-border">
       <Button variant="outline" size="sm" onClick={onExportJSON}>
         <FileJson className="h-4 w-4 mr-2" />
-        Export JSON
+        {t("exportJSON")}
       </Button>
       {onShareLink && (
         <Button
@@ -67,7 +77,7 @@ export const Toolbar = ({
             try {
               const url = await onShareLink();
               if (url && typeof url === "string") {
-                toast.success("Share link copied");
+                toast.success(t("shareLinkCopied"));
               }
             } catch (e) {
               console.error(e);
@@ -75,49 +85,79 @@ export const Toolbar = ({
           }}
         >
           <Upload className="h-4 w-4 mr-2" />
-          Share Link
+          {t("shareLink")}
         </Button>
       )}
 
       <Button variant="outline" size="sm" onClick={handleImport}>
         <Upload className="h-4 w-4 mr-2" />
-        Import JSON
+        {t("importJSON")}
       </Button>
 
       <div className="h-8 w-px bg-border" />
 
       <Button variant="outline" size="sm" onClick={onExportPDF}>
         <Save className="h-4 w-4 mr-2" />
-        Save as PDF
+        {t("saveAsPDF")}
       </Button>
 
       <Button variant="outline" size="sm" onClick={onExportPNG}>
         <Download className="h-4 w-4 mr-2" />
-        Save as PNG
+        {t("saveAsPNG")}
       </Button>
 
-      <div className="h-8 w-px bg-border" />
+      <div className="h-8  bg-border" />
 
       <Popover open={showColors} onOpenChange={setShowColors}>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm">
             <Palette className="h-4 w-4 mr-2" />
-            Colors
+            {t("colors")}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80">
-          <div className="space-y-4">
+        <PopoverContent className="lg:w-full md:w-[100vw]">
+          <div className="flex gap-5 items-center justify-evenly flex-wrap">
             <div>
-              <Label className="mb-2 block">Canvas Color</Label>
+              <Label className="mb-2 block">{t("canvasColor")}</Label>
               <HexColorPicker color={canvasColor} onChange={onCanvasColorChange} />
             </div>
             <div>
-              <Label className="mb-2 block">Default Item Color</Label>
+              <Label className="mb-2 block">{t("itemColor")}</Label>
               <HexColorPicker color={itemColor} onChange={onItemColorChange} />
             </div>
+            <div>
+              <Label className="mb-2 block">{t("titleColor")}</Label>
+              <HexColorPicker color={titleColor || "#000000"} onChange={(c) => onTitleColorChange?.(c)} />
+            </div>
+            <div>
+              <Label className="mb-2 block">{t("sectionTitleColor")}</Label>
+              <HexColorPicker color={sectionTitleColor || "#000000"} onChange={(c) => onSectionTitleColorChange?.(c)} />
+            </div>
           </div>
+
+          <p className="pt-3 md:hidden block">if this color setting is not applied correctly try scroll down</p>
         </PopoverContent>
       </Popover>
+
+      <div className="h-8 w-px bg-border" />
+
+      {/* Language switch */}
+      <div className="flex items-center gap-2">
+        <button
+          aria-label="lang-en"
+          onClick={() => setLang("en")}
+          className={`px-2 py-1 rounded ${lang === "en" ? "bg-accent text-white" : "bg-transparent"}`}
+        >
+          EN
+        </button>
+        <button
+          aria-label="lang-th"
+          onClick={() => setLang("th")}
+          className={`px-2 py-1 rounded ${lang === "th" ? "bg-accent text-white" : "bg-transparent"}`}
+        >
+          TH
+        </button>
+      </div>
 
       <div className="h-8 w-px bg-border" />
 
@@ -125,13 +165,13 @@ export const Toolbar = ({
 
       <Button
         onClick={() => {
-          const url = `https://github.com/trophoston/bmc-canvas`;
+          const url = `https://github.com/trophoston`;
+          window.open(url, "_blank");
         }}
         variant="link"
         size="sm"
       >
-        Created by
-        trophoston
+        {t("createdBy")} trophoston
       </Button>
 
     </div>
