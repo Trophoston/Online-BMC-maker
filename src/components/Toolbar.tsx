@@ -6,6 +6,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { HexColorPicker } from "react-colorful";
 import { Label } from "@/components/ui/label";
 import { useI18n } from "@/i18n/i18n";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ColorPickerWithHistory } from "./ColorPickerWithHistory";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ToolbarProps {
   onExportJSON: () => void;
@@ -13,14 +16,18 @@ interface ToolbarProps {
   onShareLink?: () => Promise<string | void>;
   onExportPDF: () => void;
   onExportPNG: () => void;
+  onDownloadTemplate?: () => void;
   canvasColor: string;
   onCanvasColorChange: (color: string) => void;
   itemColor: string;
   onItemColorChange: (color: string) => void;
+  textColor?: string;
+  onTextColorChange?: (color: string) => void;
   titleColor?: string;
   onTitleColorChange?: (color: string) => void;
   sectionTitleColor?: string;
   onSectionTitleColorChange?: (color: string) => void;
+  onApplyThemeToItems?: (themeColors: { item: string, text: string }) => void;
 }
 
 export const Toolbar = ({
@@ -29,17 +36,40 @@ export const Toolbar = ({
   onShareLink,
   onExportPDF,
   onExportPNG,
+  onDownloadTemplate,
   canvasColor,
   onCanvasColorChange,
   itemColor,
   onItemColorChange,
+  textColor,
+  onTextColorChange,
   titleColor,
   onTitleColorChange,
   sectionTitleColor,
   onSectionTitleColorChange,
+  onApplyThemeToItems,
 }: ToolbarProps) => {
   const [showColors, setShowColors] = useState(false);
   const { lang, setLang, t } = useI18n();
+
+  const applyTheme = (theme: string) => {
+    const themes: any = {
+      default: { canvas: "#f5f3ed", item: "#9dc8ac", title: "#1f2937", section: "#374151", text: "#000000" },
+      dark: { canvas: "#0f172a", item: "#1e293b", title: "#f8fafc", section: "#ffffff", text: "#ffffff" },
+      pastel: { canvas: "#fdf6e3", item: "#ffb3ba", title: "#6d6875", section: "#b5838d", text: "#333333" },
+      contrast: { canvas: "#000000", item: "#ffffff", title: "#ffffff", section: "#ffffff", text: "#1a1a1a" },
+      minimal: { canvas: "#f8f9fa", item: "#ffffff", title: "#212529", section: "#adb5bd", text: "#212529" },
+      cool: { canvas: "#f0f9ff", item: "#bae6fd", title: "#0369a1", section: "#0ea5e9", text: "#082f49" },
+      warm: { canvas: "#fff7ed", item: "#ffedd5", title: "#9a3412", section: "#ea580c", text: "#431407" }
+    };
+    const tConfig = themes[theme] || themes.default;
+    onCanvasColorChange(tConfig.canvas);
+    onItemColorChange(tConfig.item);
+    if (onTextColorChange) onTextColorChange(tConfig.text);
+    if (onTitleColorChange) onTitleColorChange(tConfig.title);
+    if (onSectionTitleColorChange) onSectionTitleColorChange(tConfig.section);
+    if (onApplyThemeToItems) onApplyThemeToItems({ item: tConfig.item, text: tConfig.text });
+  };
 
   const handleImport = () => {
     const input = document.createElement("input");
@@ -64,116 +94,154 @@ export const Toolbar = ({
   };
 
   return (
-    <div className="flex flex-wrap gap-2 p-4 bg-card rounded-lg shadow-md border border-border">
-      <Button variant="outline" size="sm" onClick={onExportJSON}>
-        <FileJson className="h-4 w-4 mr-2" />
-        {t("exportJSON")}
-      </Button>
-      {onShareLink && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={async () => {
-            try {
-              const url = await onShareLink();
-              if (url && typeof url === "string") {
-                if ((navigator as any).share) {
+    <div className="flex flex-[1] items-center justify-between w-full p-4 bg-white/70 backdrop-blur-2xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-border/40">
+      <div className="flex flex-wrap items-center gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="rounded-xl shadow-sm bg-white/80 hover:bg-white border-border/50">
+              {/* share icon here */}
+              <Upload className="h-4 w-4 mr-2" />
+              {t("Share") || "Share / Download"}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56 rounded-2xl p-2 shadow-xl bg-white/90 backdrop-blur-3xl border-border/40">
+            {onShareLink && (
+              <DropdownMenuItem
+                className="cursor-pointer rounded-xl font-medium py-2"
+                onClick={async () => {
                   try {
-                    await (navigator as any).share({ title: t("title"), url });
-                    // navigator.share may not give feedback; show a confirmation
-                    // if have cut image 
-                    if (url.includes("imagesRemoved=true")) {
-                      toast.success(t("shareLinkCopiedImagesRemoved"));
-                    }else{
-                      return t("shareLinkCopied");
+                    const url = await onShareLink();
+                    if (url && typeof url === "string") {
+                      if ((navigator as any).share) {
+                        try {
+                          await (navigator as any).share({ title: t("title"), url });
+                        } catch (err) {}
+                      }
                     }
-                  } catch (err) {
-                    
+                  } catch (e) {
+                    console.error(e);
                   }
-                } else {
-                }
-              }
-            } catch (e) {
-              console.error(e);
-            }
-          }}
-        >
-          <Upload className="h-4 w-4 mr-2" />
-          {t("shareLink")}
+                }}
+              >
+                <Upload className="h-4 w-4 mr-2 opacity-70" />
+                {t("shareLink")}
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem className="cursor-pointer rounded-xl font-medium py-2" onClick={onExportPNG}>
+              <Download className="h-4 w-4 mr-2 text-blue-500" />
+              {t("saveAsPNG")}
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer rounded-xl font-medium py-2" onClick={onExportPDF}>
+              <Save className="h-4 w-4 mr-2 text-rose-500" />
+              {t("saveAsPDF")}
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer rounded-xl font-medium py-2" onClick={onExportJSON}>
+              <FileJson className="h-4 w-4 mr-2 text-amber-500" />
+              {t("exportJSON")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Button variant="outline" size="sm" onClick={handleImport} className="rounded-xl shadow-sm bg-white/80 hover:bg-white border-border/50">
+          <Download className="h-4 w-4 mr-2 rotate-180" />
+          {t("importJSON")}
         </Button>
-      )}
 
-      <Button variant="outline" size="sm" onClick={handleImport}>
-        <Upload className="h-4 w-4 mr-2" />
-        {t("importJSON")}
-      </Button>
+        {onDownloadTemplate && (
+          <Button variant="secondary" size="sm" onClick={onDownloadTemplate} className="rounded-xl shadow-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-100">
+            <FileJson className="h-4 w-4 mr-2" />
+            LLM Template
+          </Button>
+        )}
 
-      <div className="h-8 w-px bg-border" />
-
-      <Button variant="outline" size="sm" onClick={onExportPDF}>
-        <Save className="h-4 w-4 mr-2" />
-        {t("saveAsPDF")}
-      </Button>
-
-      <Button variant="outline" size="sm" onClick={onExportPNG}>
-        <Download className="h-4 w-4 mr-2" />
-        {t("saveAsPNG")}
-      </Button>
-
-      <div className="h-8  bg-border" />
+        <div className="h-6 w-px bg-border/40 mx-2 hidden sm:block" />
 
       <Popover open={showColors} onOpenChange={setShowColors}>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="rounded-xl shadow-sm bg-white/80 hover:bg-white border-border/50">
             <Palette className="h-4 w-4 mr-2" />
             {t("colors")}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="md:w-full sm:w-[100vw]">
-          <div className="flex gap-5 items-center justify-evenly flex-wrap">
-            <div>
-              <Label className="mb-2 block">{t("canvasColor")}</Label>
-              <HexColorPicker color={canvasColor} onChange={onCanvasColorChange} />
-            </div>
-            {/* <div>
-              <Label className="mb-2 block">{t("itemColor")}</Label>
-              <HexColorPicker color={itemColor} onChange={onItemColorChange} />
-            </div> */}
-            <div>
-              <Label className="mb-2 block">{t("titleColor")}</Label>
-              <HexColorPicker color={titleColor || "#000000"} onChange={(c) => onTitleColorChange?.(c)} />
-            </div>
-            <div>
-              <Label className="mb-2 block">{t("sectionTitleColor")}</Label>
-              <HexColorPicker color={sectionTitleColor || "#000000"} onChange={(c) => onSectionTitleColorChange?.(c)} />
-            </div>
-          </div>
+        <PopoverContent className="w-[280px] rounded-3xl p-4 shadow-2xl bg-white/95 backdrop-blur-3xl border-border/40">
+          <Tabs defaultValue="canvas" className="w-full">
+            <TabsList className="grid grid-cols-3 mb-4 rounded-xl bg-muted/50 p-1">
+              <TabsTrigger value="canvas" className="rounded-lg text-xs">Canvas</TabsTrigger>
+              <TabsTrigger value="item" className="rounded-lg text-xs">Item</TabsTrigger>
+              <TabsTrigger value="text" className="rounded-lg text-xs">Text</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="canvas" className="space-y-4 animate-in fade-in-50 duration-200">
+              <div>
+                <Label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Canvas Background</Label>
+                <ColorPickerWithHistory color={canvasColor} onChange={onCanvasColorChange} />
+              </div>
+            </TabsContent>
 
+            <TabsContent value="item" className="space-y-4 animate-in fade-in-50 duration-200">
+              <div>
+                <Label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default Item Bg</Label>
+                <ColorPickerWithHistory color={itemColor} onChange={onItemColorChange} />
+              </div>
+              <div>
+                <Label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default Item Text</Label>
+                <ColorPickerWithHistory color={textColor || "#000000"} onChange={(c) => onTextColorChange?.(c)} />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="text" className="space-y-4 animate-in fade-in-50 duration-200">
+              <div>
+                <Label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Main Title</Label>
+                <ColorPickerWithHistory color={titleColor || "#000000"} onChange={(c) => onTitleColorChange?.(c)} />
+              </div>
+              <div>
+                <Label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Section Labels</Label>
+                <ColorPickerWithHistory color={sectionTitleColor || "#000000"} onChange={(c) => onSectionTitleColorChange?.(c)} />
+              </div>
+            </TabsContent>
+          </Tabs>
           <p className="pt-3 md:hidden block">{t("colorPickerScrollHint")}</p>
         </PopoverContent>
       </Popover>
 
-      <div className="h-8 w-px bg-border" />
+      <div className="h-6 w-px bg-border/40 mx-2 hidden sm:block" />
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className="rounded-xl shadow-sm bg-white/80 hover:bg-white border-border/50">
+            <Palette className="h-4 w-4 mr-2" />
+            Theme
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="rounded-2xl shadow-xl w-36">
+          {["default", "dark", "pastel", "contrast", "minimal", "cool", "warm"].map(thm => (
+            <DropdownMenuItem key={thm} className="cursor-pointer font-medium py-2 rounded-xl capitalize" onClick={() => applyTheme(thm)}>
+              {thm}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <div className="h-6 w-px bg-border/40 mx-2 hidden sm:block" />
 
       {/* Language switch */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-xl">
         <button
           aria-label="lang-en"
           onClick={() => setLang("en")}
-          className={`px-2 py-1 rounded ${lang === "en" ? "bg-accent text-white" : "bg-transparent"}`}
+          className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${lang === "en" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
           EN
         </button>
         <button
           aria-label="lang-th"
           onClick={() => setLang("th")}
-          className={`px-2 py-1 rounded ${lang === "th" ? "bg-accent text-white" : "bg-transparent"}`}
+          className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${lang === "th" ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
           TH
         </button>
       </div>
-
-      <div className="h-8 w-px bg-border" />
+      </div>
 
       {/* credit link to github */}
 

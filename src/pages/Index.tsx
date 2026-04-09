@@ -8,56 +8,104 @@ import { useI18n } from "@/i18n/i18n";
 import { Plus, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Index = () => {
   const { t } = useI18n();
   const [bmcData, setBmcData] = useState({});
   const [canvasTitle, setCanvasTitle] = useState<string>(t("clickToEditTitle"));
   const [canvasColor, setCanvasColor] = useState("#f5f3ed");
-  const [defaultItemColor, setDefaultItemColor] = useState("#9dc8ac");
+  const [defaultItemColor, setDefaultItemColor] = useState("#4285F4");
+  const [defaultTextColor, setDefaultTextColor] = useState("#000000");
   const [titleColor, setTitleColor] = useState<string>("#1f2937");
   const [sectionTitleColor, setSectionTitleColor] = useState<string>("#374151");
   const [hideAddButton, setHideAddButton] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const [showUpdatePopup, setShowUpdatePopup] = useState(false);
+  
+  // AlertDialog state management
+  const [alertConfig, setAlertConfig] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    cancelLabel?: string;
+    actionLabel?: string;
+    secondaryActionLabel?: string;
+    onAction: () => void;
+    onSecondaryAction?: () => void;
+  }>({
+    open: false,
+    title: "",
+    description: "",
+    onAction: () => {},
+  });
 
-  const handleExportJSON = () => {
-    const dataStr = JSON.stringify({ data: bmcData, canvasColor, defaultItemColor, title: canvasTitle, titleColor, sectionTitleColor }, null, 2);
-    const dataBlob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "bmc-canvas.json";
-    link.click();
-    URL.revokeObjectURL(url);
-
-    toast.success(t("canvasExportedJSON"));
+  const showAlert = (config: Omit<typeof alertConfig, "open">) => {
+    setAlertConfig({ ...config, open: true });
   };
 
-  // Create a hidden desktop-styled clone of the canvas so exports on mobile
-  // capture the desktop (lg) layout regardless of current viewport.
-  const createDesktopClone = (el: HTMLDivElement) => {
-    const clone = el.cloneNode(true) as HTMLDivElement;
+  const downloadFile = (blob: Blob, filename: string, toastMsg: string) => {
+    const performDownload = () => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success(toastMsg);
+      localStorage.setItem(`downloaded_${filename}`, "true");
+    };
 
-    // Remove responsive prefixes so Tailwind utility classes apply as desktop styles
-    const stripPrefixes = (cls = "") => cls.replace(/\b(?:sm:|md:|lg:|xl:|2xl:)/g, "");
+    if (localStorage.getItem(`downloaded_${filename}`)) {
+      showAlert({
+        title: t("alert_dl_title"),
+        description: t("alert_dl_desc").replace("{{filename}}", filename),
+        actionLabel: t("alert_dl_action"),
+        onAction: performDownload,
+      });
+    } else {
+      performDownload();
+    }
+  };
 
-    // Clean classes for root and children
-    clone.className = stripPrefixes(clone.className) + " grid-cols-5 grid-rows-3";
-    clone.querySelectorAll("*").forEach((n) => {
-      if (n instanceof HTMLElement) {
-        n.className = stripPrefixes(n.className);
-      }
-    });
+  const handleExportJSON = () => {
+    const dataStr = JSON.stringify({ data: bmcData, canvasColor, defaultItemColor, defaultTextColor, title: canvasTitle, titleColor, sectionTitleColor }, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    downloadFile(dataBlob, "bmc-canvas.json", t("canvasExportedJSON"));
+  };
 
-    // Force desktop width and make it offscreen so it doesn't flash
-    clone.style.position = "fixed";
-    clone.style.left = "-9999px";
-    clone.style.top = "0";
-    clone.style.width = "1200px";
-    clone.style.paddingBottom = "40px";
+  const handleDownloadTemplate = () => {
+    const instructions = `{
+  "description": "Generate a Business Model Canvas JSON using the exact top-level structure below.",
+  "title": "Your Generated Business Name",
+  "canvasColor": "#f5f3ed",
+  "defaultItemColor": "#9dc8ac",
+  "titleColor": "#1f2937",
+  "sectionTitleColor": "#374151",
+  "data": {
+    "keyPartnerships": [],
+    "keyActivities": [],
+    "valueProposition": [],
+    "customerRelationships": [],
+    "customers": [],
+    "keyResources": [],
+    "budgetCost": [],
+    "distributionChannels": [],
+    "revenueStreams": []
+  },
+  "note": "Fill each array in 'data' with items like: { \\"id\\": \\"1\\", \\"title\\": \\"Item Name\\", \\"description\\": \\"Details\\", \\"color\\": \\"#9dc8ac\\", \\"textColor\\": \\"#000000\\" }."
+}`;
 
-    document.body.appendChild(clone);
-    return clone;
+    const dataBlob = new Blob([instructions], { type: "application/json" });
+    downloadFile(dataBlob, "llm-bmc-template.json", "LLM Template JSON downloaded");
   };
 
   // Wait for fonts, images, and layout to settle on an element before capturing.
@@ -101,21 +149,42 @@ const Index = () => {
   };
 
   const handleImportJSON = (data: any) => {
-    if (data.data) {
+    if (!data.data) return;
+
+    const applyImport = () => {
       setBmcData(data.data);
       if (data.canvasColor) setCanvasColor(data.canvasColor);
       if (data.defaultItemColor) setDefaultItemColor(data.defaultItemColor);
+      if (data.defaultTextColor) setDefaultTextColor(data.defaultTextColor);
       if (data.title) setCanvasTitle(data.title);
       if (data.titleColor) setTitleColor(data.titleColor);
       if (data.sectionTitleColor) setSectionTitleColor(data.sectionTitleColor);
-
       toast.success(t("canvasImported"));
-    }
+    };
+
+    showAlert({
+      title: t("alert_import_title"),
+      description: t("alert_import_desc"),
+      actionLabel: t("alert_import_replace"),
+      secondaryActionLabel: t("alert_import_newtab"),
+      onAction: applyImport,
+      onSecondaryAction: () => {
+        const json = JSON.stringify(data);
+        const base64 = typeof window === "undefined" ? Buffer.from(json).toString("base64") : btoa(unescape(encodeURIComponent(json)));
+        const url = `${window.location.origin}${window.location.pathname}?bmc=${encodeURIComponent(base64)}`;
+        window.open(url, "_blank");
+      }
+    });
   };
 
   // On mount, check for shared `bmc` query param and load it if present
   useEffect(() => {
     try {
+      const hasSeenPopup = localStorage.getItem("bmcUpdatePopupSeen_v3");
+      if (!hasSeenPopup) {
+        setShowUpdatePopup(true);
+      }
+
       const params = new URLSearchParams(window.location.search);
       const encoded = params.get("bmc");
       if (encoded) {
@@ -139,6 +208,7 @@ const Index = () => {
           if (data.data) setBmcData(data.data);
           if (data.canvasColor) setCanvasColor(data.canvasColor);
           if (data.defaultItemColor) setDefaultItemColor(data.defaultItemColor);
+          if (data.defaultTextColor) setDefaultTextColor(data.defaultTextColor);
           if (data.title) setCanvasTitle(data.title);
           if (data.titleColor) setTitleColor(data.titleColor);
           if (data.sectionTitleColor) setSectionTitleColor(data.sectionTitleColor);
@@ -197,7 +267,7 @@ const Index = () => {
           return rest;
         });
       });
-      const payload = { data: cleanedData, canvasColor, defaultItemColor, title: canvasTitle, titleColor, sectionTitleColor, imagesRemoved };
+      const payload = { data: cleanedData, canvasColor, defaultItemColor, defaultTextColor, title: canvasTitle, titleColor, sectionTitleColor, imagesRemoved };
       const json = JSON.stringify(payload);
       // base64 encode the json safely
       const base64 = typeof window === "undefined" ? Buffer.from(json).toString("base64") : btoa(unescape(encodeURIComponent(json)));
@@ -239,6 +309,30 @@ const Index = () => {
     }
   };
 
+  const handleApplyThemeToItems = (themeColors: { item: string, text: string }) => {
+    const performThemeApply = () => {
+      const newData = { ...bmcData } as any;
+      Object.keys(newData).forEach((section) => {
+        if (Array.isArray(newData[section])) {
+          newData[section] = newData[section].map((item: any) => ({
+            ...item,
+            color: themeColors.item,
+            textColor: themeColors.text
+          }));
+        }
+      });
+      setBmcData(newData);
+      toast.success("Theme applied to all items");
+    };
+
+    showAlert({
+      title: t("alert_theme_title"),
+      description: t("alert_theme_desc"),
+      actionLabel: t("alert_theme_action"),
+      onAction: performThemeApply,
+    });
+  };
+
   const handleExportPDF = async () => {
     if (!canvasRef.current) return;
 
@@ -248,32 +342,24 @@ const Index = () => {
     // Wait for state to update
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    // If on a small viewport, render a desktop clone to capture the PC layout
-    const targetEl = window.innerWidth < 1024 ? createDesktopClone(canvasRef.current as HTMLDivElement) : (canvasRef.current as HTMLDivElement);
+    const targetEl = canvasRef.current;
+    await waitForRender(targetEl);
 
-    // Wait for fonts/images/layout to settle on the target before capturing
-    await waitForRender(targetEl as HTMLElement);
-
+    const isMobile = window.innerWidth < 1024;
     const canvas = await html2canvas(targetEl, {
       scale: 2,
+      windowWidth: isMobile ? 1200 : undefined,
       backgroundColor: canvasColor,
     });
 
     const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({
-      orientation: canvas.width > canvas.height ? "landscape" : "portrait",
-      unit: "px",
-      format: [canvas.width, canvas.height],
+    canvas.toBlob((blob) => {
+      if (blob) {
+        downloadFile(blob, "bmc-canvas.pdf", t("canvasExportedPDF") || "Canvas exported as PDF");
+      }
     });
 
-    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
-    pdf.save("bmc-canvas.pdf");
-    // remove clone if we created one
-    if (targetEl !== canvasRef.current && targetEl instanceof HTMLElement) {
-      targetEl.remove();
-    }
     setHideAddButton(false);
-    toast.success(t("canvasExportedPDF") ?? "Canvas exported as PDF", { id: loadingId });
   };
 
   const handleExportPNG = async () => {
@@ -285,31 +371,20 @@ const Index = () => {
     // Wait for state to update
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    // Use a desktop clone on small viewports so saved image matches PC layout
-    const targetEl = window.innerWidth < 1024 ? createDesktopClone(canvasRef.current as HTMLDivElement) : (canvasRef.current as HTMLDivElement);
+    const targetEl = canvasRef.current;
+    await waitForRender(targetEl);
 
-    // Wait for fonts/images/layout to settle on the target before capturing
-    await waitForRender(targetEl as HTMLElement);
-
+    const isMobile = window.innerWidth < 1024;
     const canvas = await html2canvas(targetEl, {
       scale: 2,
+      windowWidth: isMobile ? 1200 : undefined,
       backgroundColor: canvasColor,
     });
 
     canvas.toBlob((blob) => {
       if (blob) {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "bmc-canvas.png";
-        link.click();
-        URL.revokeObjectURL(url);
-        // remove clone if created
-        if (targetEl !== canvasRef.current && targetEl instanceof HTMLElement) {
-          targetEl.remove();
-        }
+        downloadFile(blob, "bmc-canvas.png", t("canvasExportedPNG") || "Canvas exported as PNG");
         setHideAddButton(false);
-        toast.success(t("canvasExportedPNG") ?? "Canvas exported as PNG", { id: loadingId });
       }
     });
   };
@@ -330,14 +405,18 @@ const Index = () => {
           onShareLink={handleShareLink}
           onExportPDF={handleExportPDF}
           onExportPNG={handleExportPNG}
+          onDownloadTemplate={handleDownloadTemplate}
           canvasColor={canvasColor}
           onCanvasColorChange={setCanvasColor}
           itemColor={defaultItemColor}
           onItemColorChange={setDefaultItemColor}
+          textColor={defaultTextColor}
+          onTextColorChange={setDefaultTextColor}
           titleColor={titleColor}
           onTitleColorChange={setTitleColor}
           sectionTitleColor={sectionTitleColor}
           onSectionTitleColorChange={setSectionTitleColor}
+          onApplyThemeToItems={handleApplyThemeToItems}
         />
 
         <div className="flex flex-wrap gap-2">
@@ -366,20 +445,99 @@ const Index = () => {
           </Button>
         </div>
 
-        <div ref={canvasRef}>
+        <div className="rounded-[2.5rem] overflow-hidden">
           <BMCCanvas
+            innerRef={canvasRef}
             data={bmcData}
             onDataChange={setBmcData}
             canvasColor={canvasColor}
             defaultItemColor={defaultItemColor}
+            defaultTextColor={defaultTextColor}
             hideAddButton={hideAddButton}
             title={canvasTitle}
             onTitleChange={setCanvasTitle}
             titleColor={titleColor}
             sectionTitleColor={sectionTitleColor}
           />
+          <div className="mt-4 text-right px-8 pb-4">
+             <a 
+              href="https://github.com/trophoston" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[11px] font-medium opacity-40 hover:opacity-80 transition-opacity"
+              style={{ color: sectionTitleColor || 'inherit' }}
+            >
+              {t("credit_text")}
+            </a>
+          </div>
         </div>
       </div>
+
+      <AlertDialog open={showUpdatePopup} onOpenChange={setShowUpdatePopup}>
+        <AlertDialogContent className="rounded-3xl border border-border/40 shadow-xl max-w-sm sm:max-w-md bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-semibold text-center text-foreground">Welcome to the New Update!</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm mt-3 text-center text-muted-foreground leading-relaxed whitespace-pre-wrap">
+              • Apple-style Alert System
+              • Fresh Apple Bento-style UI
+              • LLM Integration Templates
+              • Beautiful PDF/PNG Exports
+              • Unified Share Menu
+              • Custom Themes & Color History
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6 sm:justify-center">
+            <AlertDialogAction onClick={() => {
+                localStorage.setItem("bmcUpdatePopupSeen_v3_alert", "true");
+                setShowUpdatePopup(false);
+              }}
+              className="rounded-xl px-6 bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              Get Started
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={alertConfig.open} onOpenChange={(o) => setAlertConfig(prev => ({ ...prev, open: o }))}>
+        <AlertDialogContent className="rounded-[2rem] border border-border/40 shadow-2xl max-w-[400px] p-8 bg-white/95 backdrop-blur-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold tracking-tight text-center">{alertConfig.title}</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-base mt-2 text-muted-foreground leading-relaxed">
+              {alertConfig.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex flex-col gap-2 mt-6">
+             <AlertDialogAction 
+              onClick={alertConfig.onAction}
+              className="rounded-2xl py-6 text-base font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              {alertConfig.actionLabel || "Continue"}
+            </AlertDialogAction>
+            
+            {alertConfig.secondaryActionLabel && (
+               <Button 
+                variant="outline" 
+                onClick={() => {
+                  alertConfig.onSecondaryAction?.();
+                  setAlertConfig(prev => ({ ...prev, open: false }));
+                }}
+                className="rounded-2xl py-6 text-base font-medium border-border/60 hover:bg-accent/50 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {alertConfig.secondaryActionLabel}
+              </Button>
+            )}
+
+            <Button 
+              variant="ghost" 
+              onClick={() => setAlertConfig(prev => ({ ...prev, open: false }))}
+              className="rounded-2xl py-6 text-base font-medium text-muted-foreground hover:text-foreground transition-all"
+            >
+              {alertConfig.cancelLabel || "Cancel"}
+            </Button>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

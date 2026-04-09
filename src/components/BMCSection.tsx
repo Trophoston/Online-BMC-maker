@@ -34,9 +34,9 @@ export const BMCSection = ({
   onDeleteItem,
   onReorderItems,
   defaultColor,
-  hideAddButton = false
-  , icon
-  , sectionTitleColor
+  hideAddButton = false,
+  icon,
+  sectionTitleColor
 }: BMCSectionProps) => {
   const { t } = useI18n();
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -63,12 +63,12 @@ export const BMCSection = ({
   };
 
   return (
-    <div className="h-full flex flex-col border-2 border-border bg-card rounded-lg p-4">
-      <div className="flex items-center gap-3 mb-5">
-        {icon && <span className="text-muted-foreground">{icon}</span>}
-        <h3 className="font-semibold text-sm text-muted-foreground" style={{ color: sectionTitleColor || undefined }}>{title}</h3>
+    <div className="h-full flex flex-col border border-border/40 bg-card/60 backdrop-blur-3xl shadow-sm rounded-3xl p-5 transition-all hover:shadow-md">
+      <div className="flex items-center gap-3 mb-5 px-1">
+        {icon && <span className="text-muted-foreground/80" style={{ color: sectionTitleColor || undefined }}>{icon}</span>}
+        <h3 className="font-semibold text-sm tracking-tight text-muted-foreground/90" style={{ color: sectionTitleColor || undefined }}>{title}</h3>
       </div>
-      <div className="flex-1 space-y-2 overflow-auto">
+      <div className="flex-1 space-y-3 overflow-auto pr-1" style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}>
         {items.map((item, index) => (
           <Card
             key={item.id}
@@ -76,7 +76,7 @@ export const BMCSection = ({
             onDragStart={(e) => handleDragStart(e, index)}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, index)}
-            className="p-3 pb-3 group relative cursor-grab active:cursor-grabbing hover:shadow-md transition-all overflow-visible"
+            className="p-4 group relative cursor-grab active:cursor-grabbing shadow-sm border-0 rounded-2xl transition-all duration-300 overflow-visible hover:-translate-y-1 hover:shadow-lg"
             style={{ backgroundColor: item.color, color: item.textColor || "#000000" }}
             onClick={() => onEditItem(item)}
           >
@@ -84,54 +84,33 @@ export const BMCSection = ({
               <img
                 src={item.imageUrl}
                 alt={item.title}
-                className="w-full h-40 object-cover rounded-sm mb-2"
+                className="w-full h-40 object-cover rounded-xl mb-3 shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
               />
             )}
-            <div className="font-medium text-sm mb-2 whitespace-normal break-words">{item.title}</div>
+            <div className="font-semibold text-[15px] mb-2 whitespace-normal break-words leading-tight">{item.title}</div>
             {item.description && (
-              <div className="text-xs opacity-90 whitespace-pre-wrap break-words mb-2">{item.description}</div>
+              <div className="text-[13px] opacity-80 whitespace-pre-wrap break-words leading-relaxed">{item.description}</div>
             )}
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-              <div className="flex flex-row cursor-pointer">
-                {/* <MoveVertical className="h-4 w-4 " /> */}
-                <Pen className="h-4 w-4 m-1 " />
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1 bg-black/5 backdrop-blur-md rounded-full p-1">
+              <div className="flex flex-row cursor-pointer rounded-full hover:bg-black/10 transition-colors p-1">
+                <Pen className="h-[14px] w-[14px]" />
               </div>
-              {/* <Button
-                size="icon"
-                variant="secondary"
-                className="h-6 w-6"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEditItem(item);
-                }}
-              >
-                <Edit2 className="h-3 w-3" />
-              </Button>
-              <Button
-                size="icon"
-                variant="destructive"
-                className="h-6 w-6"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteItem(item.id);
-                }}
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button> */}
             </div>
           </Card>
         ))}
         {!hideAddButton && (
           <Button
-            variant="outline"
-            className="w-full border-dashed hover:bg-accent/50"
+            variant="ghost"
+            style={{ color: sectionTitleColor || undefined, borderColor: sectionTitleColor ? `${sectionTitleColor}40` : undefined }}
+            className="w-full border border-dashed hover:border-border/80 hover:bg-accent/40 rounded-2xl py-6 transition-colors"
             onClick={onAddItem}
           >
-            <Plus className="h-4 w-4 lg:mr-2" />
-            {t("addItem")}
+            <Plus className="h-5 w-5 mr-2 opacity-70" />
+            <span className="font-medium opacity-80">{t("addItem")}</span>
           </Button>
         )}
       </div>
     </div>
   );
 };
+

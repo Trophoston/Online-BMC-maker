@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Upload, Link as LinkIcon, Clipboard } from "lucide-react";
-import { HexColorPicker } from "react-colorful";
+import { ColorPickerWithHistory } from "./ColorPickerWithHistory";
 import { BMCItem } from "./BMCSection";
 
 interface ItemDialogProps {
@@ -16,15 +16,17 @@ interface ItemDialogProps {
   onDelete?: (id: string) => void;
   item?: BMCItem | null;
   defaultColor: string;
+  defaultTextColor?: string;
+  sectionTitle?: string | null;
 }
 
-export const ItemDialog = ({ open, onClose, onSave, onDelete, item, defaultColor }: ItemDialogProps) => {
+export const ItemDialog = ({ open, onClose, onSave, onDelete, item, defaultColor, defaultTextColor = "#000000", sectionTitle }: ItemDialogProps) => {
   const { t } = useI18n();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [color, setColor] = useState(defaultColor);
-  const [textColor, setTextColor] = useState("#000000");
+  const [textColor, setTextColor] = useState(defaultTextColor);
   const [showUrlInput, setShowUrlInput] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -34,10 +36,10 @@ export const ItemDialog = ({ open, onClose, onSave, onDelete, item, defaultColor
       setTitle(item?.title || "");
       setDescription(item?.description || "");
       setImageUrl(item?.imageUrl || "");
-      setColor(item?.color || "#6aaf8c");
-      setTextColor(item?.textColor || "#fff");
+      setColor(item?.color || defaultColor);
+      setTextColor(item?.textColor || defaultTextColor);
     }
-  }, [open, item, defaultColor]);
+  }, [open, item, defaultColor, defaultTextColor]);
 
   const handleSave = () => {
     onSave({
@@ -56,7 +58,7 @@ export const ItemDialog = ({ open, onClose, onSave, onDelete, item, defaultColor
     setDescription("");
     setImageUrl("");
     setColor(defaultColor);
-    setTextColor("#000000");
+    setTextColor(defaultTextColor);
     setShowUrlInput(false);
     onClose();
   };
@@ -95,11 +97,18 @@ export const ItemDialog = ({ open, onClose, onSave, onDelete, item, defaultColor
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl w-[90vw] max-h-[90vh] overflow-y-auto rounded-lg">
-        <DialogHeader>
-          <DialogTitle>{item ? t("editItem") : t("addNewItem")}</DialogTitle>
+      <DialogContent className="sm:max-w-2xl w-[90vw] max-h-[90vh] overflow-y-auto rounded-3xl p-8 border-0 shadow-2xl">
+        <DialogHeader className="mb-2">
+          <DialogTitle className="text-2xl font-bold tracking-tight">
+            {item ? t("editItem") : t("addNewItem")}
+          </DialogTitle>
+          {sectionTitle && (
+            <p className="text-sm font-medium text-muted-foreground mt-1 bg-accent/50 d-inline-flex w-fit px-3 py-1 rounded-full">
+              Category: {sectionTitle}
+            </p>
+          )}
         </DialogHeader>
-        <div className="space-y-4" style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}>
+        <div className="space-y-5 mt-2" style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}>
           <div>
             <Label htmlFor="title">{t("field_title")}</Label>
             <Input
@@ -174,17 +183,17 @@ export const ItemDialog = ({ open, onClose, onSave, onDelete, item, defaultColor
             )}
           </div>
 
-          <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
-            <div>
+          <div className="flex flex-col sm:flex-row gap-8">
+            <div className="flex-1">
               <Label>{t("backgroundColor")}</Label>
-              <div className="mt-2">
-                <HexColorPicker color={color} onChange={setColor} />
+              <div className="mt-3">
+                <ColorPickerWithHistory color={color} onChange={setColor} />
               </div>
             </div>
-            <div>
+            <div className="flex-1">
               <Label>{t("textColor")}</Label>
-              <div className="mt-2">
-                <HexColorPicker color={textColor} onChange={setTextColor} />
+              <div className="mt-3">
+                <ColorPickerWithHistory color={textColor} onChange={setTextColor} />
               </div>
             </div>
           </div>
@@ -193,6 +202,7 @@ export const ItemDialog = ({ open, onClose, onSave, onDelete, item, defaultColor
             {item && (
               <Button
                 variant="destructive"
+                className="rounded-xl flex-1 sm:flex-none"
                 onClick={() => {
                   const confirmed = window.confirm(t("confirmDelete") || "Are you sure?");
                   if (confirmed) {
@@ -204,10 +214,10 @@ export const ItemDialog = ({ open, onClose, onSave, onDelete, item, defaultColor
                 {t("delete")}
               </Button>
             )}
-            <Button variant="outline" onClick={handleClose}>
+            <Button variant="outline" className="rounded-xl flex-1 sm:flex-none" onClick={handleClose}>
               {t("cancel")}
             </Button>
-            <Button onClick={handleSave} disabled={!title}>
+            <Button className="rounded-xl flex-1 sm:flex-none" onClick={handleSave} disabled={!title}>
               {t("save")}
             </Button>
           </div>

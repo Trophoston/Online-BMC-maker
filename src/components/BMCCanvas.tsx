@@ -70,16 +70,19 @@ interface BMCCanvasProps {
   onDataChange: (data: BMCData) => void;
   canvasColor: string;
   defaultItemColor: string;
+  defaultTextColor?: string;
   hideAddButton?: boolean;
   title?: string;
   onTitleChange?: (title: string) => void;
   titleColor?: string;
   sectionTitleColor?: string;
+  innerRef?: React.RefObject<HTMLDivElement>;
 }
 
-export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, hideAddButton = false, title, onTitleChange, titleColor, sectionTitleColor }: BMCCanvasProps) => {
+export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, defaultTextColor = "#000000", hideAddButton = false, title, onTitleChange, titleColor, sectionTitleColor, innerRef }: BMCCanvasProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState<string | null>(null);
+  const [currentSectionTitle, setCurrentSectionTitle] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<BMCItem | null>(null);
   const { t } = useI18n();
 
@@ -95,14 +98,16 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
     { id: "revenueStreams", title: t("sec_revenueStreams"), icon: <Wallet className="h-5 w-5" /> },
   ];
 
-  const handleAddItem = (sectionId: string) => {
+  const handleAddItem = (sectionId: string, sectionTitle: string) => {
     setCurrentSection(sectionId); 
+    setCurrentSectionTitle(sectionTitle);
     setEditingItem(null);
     setDialogOpen(true);
   };
 
-  const handleEditItem = (sectionId: string, item: BMCItem) => {
+  const handleEditItem = (sectionId: string, sectionTitle: string, item: BMCItem) => {
     setCurrentSection(sectionId);
+    setCurrentSectionTitle(sectionTitle);
     setEditingItem(item);
     setDialogOpen(true);
   };
@@ -144,7 +149,7 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
         description: itemData.description || "",
         imageUrl: itemData.imageUrl,
           color: itemData.color || defaultItemColor,
-          textColor: itemData.textColor || "#000000",
+          textColor: itemData.textColor || defaultTextColor,
       };
       newData[currentSection].push(newItem);
     }
@@ -155,8 +160,9 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
   return (
     <>
       <div
+        ref={innerRef}
         style={{ backgroundColor: canvasColor }}
-        className="pt-28 relative grid grid-cols-1 md:grid-cols-2a md:grid-cols-5 md:grid-rows-3 gap-4 sm:px-6 px-3 pb-6 rounded-xl shadow-lg"
+        className="pt-28 relative grid grid-cols-1 md:grid-cols-2a md:grid-cols-5 md:grid-rows-3 gap-5 sm:px-8 px-4 pb-8 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
       >
         {/* Editable canvas title (click to edit) - fixed top-left H1 */}
         <EditableTitle title={title} onTitleChange={onTitleChange} titleColor={titleColor} />
@@ -166,8 +172,8 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             title={sections[0].title}
             icon={sections[0].icon}
             items={data[sections[0].id] || []}
-            onAddItem={() => handleAddItem(sections[0].id)}
-            onEditItem={(item) => handleEditItem(sections[0].id, item)}
+            onAddItem={() => handleAddItem(sections[0].id, sections[0].title)}
+            onEditItem={(item) => handleEditItem(sections[0].id, sections[0].title, item)}
             onDeleteItem={(id) => handleDeleteItem(sections[0].id, id)}
             onReorderItems={(items) => handleReorderItems(sections[0].id, items)}
             defaultColor={defaultItemColor}
@@ -181,8 +187,8 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             title={sections[1].title}
             icon={sections[1].icon}
             items={data[sections[1].id] || []}
-            onAddItem={() => handleAddItem(sections[1].id)}
-            onEditItem={(item) => handleEditItem(sections[1].id, item)}
+            onAddItem={() => handleAddItem(sections[1].id, sections[1].title)}
+            onEditItem={(item) => handleEditItem(sections[1].id, sections[1].title, item)}
             onDeleteItem={(id) => handleDeleteItem(sections[1].id, id)}
             onReorderItems={(items) => handleReorderItems(sections[1].id, items)}
             defaultColor={defaultItemColor}
@@ -197,8 +203,8 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             title={sections[5].title}
             icon={sections[5].icon}
             items={data[sections[5].id] || []}
-            onAddItem={() => handleAddItem(sections[5].id)}
-            onEditItem={(item) => handleEditItem(sections[5].id, item)}
+            onAddItem={() => handleAddItem(sections[5].id, sections[5].title)}
+            onEditItem={(item) => handleEditItem(sections[5].id, sections[5].title, item)}
             onDeleteItem={(id) => handleDeleteItem(sections[5].id, id)}
             onReorderItems={(items) => handleReorderItems(sections[5].id, items)}
             defaultColor={defaultItemColor}
@@ -213,8 +219,8 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             title={sections[2].title}
             icon={sections[2].icon}
             items={data[sections[2].id] || []}
-            onAddItem={() => handleAddItem(sections[2].id)}
-            onEditItem={(item) => handleEditItem(sections[2].id, item)}
+            onAddItem={() => handleAddItem(sections[2].id, sections[2].title)}
+            onEditItem={(item) => handleEditItem(sections[2].id, sections[2].title, item)}
             onDeleteItem={(id) => handleDeleteItem(sections[2].id, id)}
             onReorderItems={(items) => handleReorderItems(sections[2].id, items)}
             defaultColor={defaultItemColor}
@@ -229,8 +235,8 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             title={sections[3].title}
             icon={sections[3].icon}
             items={data[sections[3].id] || []}
-            onAddItem={() => handleAddItem(sections[3].id)}
-            onEditItem={(item) => handleEditItem(sections[3].id, item)}
+            onAddItem={() => handleAddItem(sections[3].id, sections[3].title)}
+            onEditItem={(item) => handleEditItem(sections[3].id, sections[3].title, item)}
             onDeleteItem={(id) => handleDeleteItem(sections[3].id, id)}
             onReorderItems={(items) => handleReorderItems(sections[3].id, items)}
             defaultColor={defaultItemColor}
@@ -245,8 +251,8 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             title={sections[7].title}
             icon={sections[7].icon}
             items={data[sections[7].id] || []}
-            onAddItem={() => handleAddItem(sections[7].id)}
-            onEditItem={(item) => handleEditItem(sections[7].id, item)}
+            onAddItem={() => handleAddItem(sections[7].id, sections[7].title)}
+            onEditItem={(item) => handleEditItem(sections[7].id, sections[7].title, item)}
             onDeleteItem={(id) => handleDeleteItem(sections[7].id, id)}
             onReorderItems={(items) => handleReorderItems(sections[7].id, items)}
             defaultColor={defaultItemColor}
@@ -261,8 +267,8 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             title={sections[4].title}
             icon={sections[4].icon}
             items={data[sections[4].id] || []}
-            onAddItem={() => handleAddItem(sections[4].id)}
-            onEditItem={(item) => handleEditItem(sections[4].id, item)}
+            onAddItem={() => handleAddItem(sections[4].id, sections[4].title)}
+            onEditItem={(item) => handleEditItem(sections[4].id, sections[4].title, item)}
             onDeleteItem={(id) => handleDeleteItem(sections[4].id, id)}
             onReorderItems={(items) => handleReorderItems(sections[4].id, items)}
             defaultColor={defaultItemColor}
@@ -277,8 +283,8 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             title={sections[6].title}
             icon={sections[6].icon}
             items={data[sections[6].id] || []}
-            onAddItem={() => handleAddItem(sections[6].id)}
-            onEditItem={(item) => handleEditItem(sections[6].id, item)}
+            onAddItem={() => handleAddItem(sections[6].id, sections[6].title)}
+            onEditItem={(item) => handleEditItem(sections[6].id, sections[6].title, item)}
             onDeleteItem={(id) => handleDeleteItem(sections[6].id, id)}
             onReorderItems={(items) => handleReorderItems(sections[6].id, items)}
             defaultColor={defaultItemColor}
@@ -293,8 +299,8 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
             title={sections[8].title}
             icon={sections[8].icon}
             items={data[sections[8].id] || []}
-            onAddItem={() => handleAddItem(sections[8].id)}
-            onEditItem={(item) => handleEditItem(sections[8].id, item)}
+            onAddItem={() => handleAddItem(sections[8].id, sections[8].title)}
+            onEditItem={(item) => handleEditItem(sections[8].id, sections[8].title, item)}
             onDeleteItem={(id) => handleDeleteItem(sections[8].id, id)}
             onReorderItems={(items) => handleReorderItems(sections[8].id, items)}
             defaultColor={defaultItemColor}
@@ -314,6 +320,8 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, h
         }}
         item={editingItem}
         defaultColor={defaultItemColor}
+        defaultTextColor={defaultTextColor}
+        sectionTitle={currentSectionTitle}
       />
     </>
   );
