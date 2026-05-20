@@ -82,8 +82,7 @@ const Index = () => {
     downloadFile(dataBlob, "bmc-canvas.json", t("canvasExportedJSON"));
   };
 
-  const handleDownloadTemplate = () => {
-    const instructions = `{
+  const llmTemplateInstructions = `{
   "description": "Generate a Business Model Canvas JSON using the exact top-level structure below.",
   "title": "Your Generated Business Name",
   "canvasColor": "#f5f3ed",
@@ -104,8 +103,18 @@ const Index = () => {
   "note": "Fill each array in 'data' with items like: { \\"id\\": \\"1\\", \\"title\\": \\"Item Name\\", \\"description\\": \\"Details\\", \\"color\\": \\"#9dc8ac\\", \\"textColor\\": \\"#000000\\" }."
 }`;
 
-    const dataBlob = new Blob([instructions], { type: "application/json" });
+  const handleDownloadTemplate = () => {
+    const dataBlob = new Blob([llmTemplateInstructions], { type: "application/json" });
     downloadFile(dataBlob, "llm-bmc-template.json", "LLM Template JSON downloaded");
+  };
+
+  const handleCopyTemplate = async () => {
+    try {
+      await navigator.clipboard.writeText(llmTemplateInstructions);
+      toast.success("LLM Template JSON copied to clipboard");
+    } catch (err) {
+      toast.error("Failed to copy LLM Template");
+    }
   };
 
   // Wait for fonts, images, and layout to settle on an element before capturing.
@@ -406,6 +415,7 @@ const Index = () => {
           onExportPDF={handleExportPDF}
           onExportPNG={handleExportPNG}
           onDownloadTemplate={handleDownloadTemplate}
+          onCopyTemplate={handleCopyTemplate}
           canvasColor={canvasColor}
           onCanvasColorChange={setCanvasColor}
           itemColor={defaultItemColor}

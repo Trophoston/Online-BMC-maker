@@ -17,6 +17,7 @@ interface ToolbarProps {
   onExportPDF: () => void;
   onExportPNG: () => void;
   onDownloadTemplate?: () => void;
+  onCopyTemplate?: () => void;
   canvasColor: string;
   onCanvasColorChange: (color: string) => void;
   itemColor: string;
@@ -37,6 +38,7 @@ export const Toolbar = ({
   onExportPDF,
   onExportPNG,
   onDownloadTemplate,
+  onCopyTemplate,
   canvasColor,
   onCanvasColorChange,
   itemColor,
@@ -147,11 +149,29 @@ export const Toolbar = ({
           {t("importJSON")}
         </Button>
 
-        {onDownloadTemplate && (
-          <Button variant="secondary" size="sm" onClick={onDownloadTemplate} className="rounded-xl shadow-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-100">
-            <FileJson className="h-4 w-4 mr-2" />
-            LLM Template
-          </Button>
+        {(onDownloadTemplate || onCopyTemplate) && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="sm" className="rounded-xl shadow-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-100">
+                <FileJson className="h-4 w-4 mr-2" />
+                LLM Template
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56 rounded-2xl p-2 shadow-xl bg-white/90 backdrop-blur-3xl border-border/40">
+              {onDownloadTemplate && (
+                <DropdownMenuItem className="cursor-pointer rounded-xl font-medium py-2" onClick={onDownloadTemplate}>
+                  <Download className="h-4 w-4 mr-2 text-indigo-500" />
+                  Download Template
+                </DropdownMenuItem>
+              )}
+              {onCopyTemplate && (
+                <DropdownMenuItem className="cursor-pointer rounded-xl font-medium py-2" onClick={onCopyTemplate}>
+                  <FileJson className="h-4 w-4 mr-2 text-indigo-500" />
+                  Copy JSON Template
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
 
         <div className="h-6 w-px bg-border/40 mx-2 hidden sm:block" />
