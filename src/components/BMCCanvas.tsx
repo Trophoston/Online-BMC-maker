@@ -5,15 +5,16 @@ import { User, Activity, Star, Heart, Users, UserPlus, Tag, Wallet, Globe } from
 import { useI18n } from "@/i18n/i18n";
 
 // Inline editable title component — accepts props so parent can control value
-// Added titleColor prop to EditableTitle
 const EditableTitle = ({
   title: propTitle,
   onTitleChange,
   titleColor,
+  hideAddButton = false,
 }: {
   title?: string;
   onTitleChange?: (t: string) => void;
   titleColor?: string;
+  hideAddButton?: boolean;
 }) => {
   const { t } = useI18n();
   const [editing, setEditing] = useState(false);
@@ -31,10 +32,10 @@ const EditableTitle = ({
     finishEdit();
   };
 
-  const title = propTitle ?? t("clickToEditTitle");
+  const title = propTitle || t("clickToEditTitle");
 
   return (
-    <div className="absolute top-5 left-6 z-20 p-5">
+    <div className={`flex flex-col gap-1 w-full select-text ${hideAddButton ? "pt-1 pb-3 px-3" : "p-6 sm:p-8"}`}>
       {editing ? (
         <input
           ref={inputRef}
@@ -45,18 +46,26 @@ const EditableTitle = ({
               finishAndSave((e.target as HTMLInputElement).value);
             }
           }}
-          className="sm:w-[50vw] w-full bg-transparent border-none outline-none text-2xl md:text-3xl lg:text-4xl font-bold text-muted-foreground"
+          className="w-full bg-transparent border-b border-border/60 outline-none text-3xl md:text-4xl lg:text-5xl tracking-tight"
           style={{ color: titleColor || undefined }}
         />
       ) : (
-        <h1
-          className="text-2xl md:text-3xl lg:text-4xl font-bold text-muted-foreground cursor-text max-w-[90vw]"
-          onClick={startEdit}
-          style={{ color: titleColor || undefined }}
-        >
-          {title}
-        </h1>
+        <div className="group flex items-center gap-3">
+          <h1
+            className="text-3xl md:text-4xl lg:text-5xl tracking-tight cursor-text hover:opacity-85 transition-opacity"
+            onClick={startEdit}
+            style={{ color: titleColor || undefined }}
+          >
+            {title}
+          </h1>
+          <span className="text-xs px-3 py-1 bg-black/5 dark:bg-white/10 text-muted-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+            {t("editItem") || "Edit"}
+          </span>
+        </div>
       )}
+      <p className="text-[13px] opacity-65 uppercase tracking-widest mt-1.5" style={{ color: titleColor || undefined }}>
+        Business Model Canvas
+      </p>
     </div>
   );
 };
@@ -76,10 +85,9 @@ interface BMCCanvasProps {
   onTitleChange?: (title: string) => void;
   titleColor?: string;
   sectionTitleColor?: string;
-  innerRef?: React.RefObject<HTMLDivElement>;
 }
 
-export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, defaultTextColor = "#000000", hideAddButton = false, title, onTitleChange, titleColor, sectionTitleColor, innerRef }: BMCCanvasProps) => {
+export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, defaultTextColor = "#000000", hideAddButton = false, title, onTitleChange, titleColor, sectionTitleColor }: BMCCanvasProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState<string | null>(null);
   const [currentSectionTitle, setCurrentSectionTitle] = useState<string | null>(null);
@@ -160,153 +168,154 @@ export const BMCCanvas = ({ data, onDataChange, canvasColor, defaultItemColor, d
   return (
     <>
       <div
-        ref={innerRef}
         style={{ backgroundColor: canvasColor }}
-        className="pt-28 relative grid grid-cols-1 md:grid-cols-2a md:grid-cols-5 md:grid-rows-3 gap-5 sm:px-8 px-4 pb-8 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
+        className={`rounded-[2.5rem] shadow-[0_12px_40px_rgba(0,0,0,0.08)] flex flex-col gap-2 ${hideAddButton ? "p-4" : "p-6 sm:p-8"}`}
       >
-        {/* Editable canvas title (click to edit) - fixed top-left H1 */}
-        <EditableTitle title={title} onTitleChange={onTitleChange} titleColor={titleColor} />
-        {/* Left tall: 5. Key Partnerships (col1, row 1-2) */}
-        <div className="col-span-1 md:col-start-1 md:row-start-1 md:row-span-2 min-h-[250px] md:min-h-[520px]">
-          <BMCSection
-            title={sections[0].title}
-            icon={sections[0].icon}
-            items={data[sections[0].id] || []}
-            onAddItem={() => handleAddItem(sections[0].id, sections[0].title)}
-            onEditItem={(item) => handleEditItem(sections[0].id, sections[0].title, item)}
-            onDeleteItem={(id) => handleDeleteItem(sections[0].id, id)}
-            onReorderItems={(items) => handleReorderItems(sections[0].id, items)}
-            defaultColor={defaultItemColor}
-            hideAddButton={hideAddButton}
-            sectionTitleColor={sectionTitleColor}
-          />
-        </div>
-        {/* Col 2 top: 6. Key Activities */}
-        <div className="col-span-1 md:col-start-2 md:row-start-1 min-h-[200px] md:min-h-[250px]">
-          <BMCSection
-            title={sections[1].title}
-            icon={sections[1].icon}
-            items={data[sections[1].id] || []}
-            onAddItem={() => handleAddItem(sections[1].id, sections[1].title)}
-            onEditItem={(item) => handleEditItem(sections[1].id, sections[1].title, item)}
-            onDeleteItem={(id) => handleDeleteItem(sections[1].id, id)}
-            onReorderItems={(items) => handleReorderItems(sections[1].id, items)}
-            defaultColor={defaultItemColor}
-            hideAddButton={hideAddButton}
-            sectionTitleColor={sectionTitleColor}
-          />
-        </div>
+        <EditableTitle title={title} onTitleChange={onTitleChange} titleColor={titleColor} hideAddButton={hideAddButton} />
+        
+        <div className={`grid ${hideAddButton ? "grid-cols-5 grid-rows-3 gap-4" : "grid-cols-1 md:grid-cols-5 md:grid-rows-3 gap-5"}`}>
+          {/* Left tall: 5. Key Partnerships (col1, row 1-2) */}
+          <div className={`col-span-1 min-h-[250px] ${hideAddButton ? "col-start-1 row-start-1 row-span-2 min-h-[280px]" : "md:col-start-1 md:row-start-1 md:row-span-2 md:min-h-[520px]"}`}>
+            <BMCSection
+              title={sections[0].title}
+              icon={sections[0].icon}
+              items={data[sections[0].id] || []}
+              onAddItem={() => handleAddItem(sections[0].id, sections[0].title)}
+              onEditItem={(item) => handleEditItem(sections[0].id, sections[0].title, item)}
+              onDeleteItem={(id) => handleDeleteItem(sections[0].id, id)}
+              onReorderItems={(items) => handleReorderItems(sections[0].id, items)}
+              defaultColor={defaultItemColor}
+              hideAddButton={hideAddButton}
+              sectionTitleColor={sectionTitleColor}
+            />
+          </div>
+          {/* Col 2 top: 6. Key Activities */}
+          <div className={`col-span-1 min-h-[200px] ${hideAddButton ? "col-start-2 row-start-1 min-h-[130px]" : "md:col-start-2 md:row-start-1 md:min-h-[250px]"}`}>
+            <BMCSection
+              title={sections[1].title}
+              icon={sections[1].icon}
+              items={data[sections[1].id] || []}
+              onAddItem={() => handleAddItem(sections[1].id, sections[1].title)}
+              onEditItem={(item) => handleEditItem(sections[1].id, sections[1].title, item)}
+              onDeleteItem={(id) => handleDeleteItem(sections[1].id, id)}
+              onReorderItems={(items) => handleReorderItems(sections[1].id, items)}
+              defaultColor={defaultItemColor}
+              hideAddButton={hideAddButton}
+              sectionTitleColor={sectionTitleColor}
+            />
+          </div>
 
-        {/* Col 2 bottom: 7. Key Resources */}
-        <div className="col-span-1 md:col-start-2 md:row-start-2 min-h-[200px] md:min-h-[250px]">
-          <BMCSection
-            title={sections[5].title}
-            icon={sections[5].icon}
-            items={data[sections[5].id] || []}
-            onAddItem={() => handleAddItem(sections[5].id, sections[5].title)}
-            onEditItem={(item) => handleEditItem(sections[5].id, sections[5].title, item)}
-            onDeleteItem={(id) => handleDeleteItem(sections[5].id, id)}
-            onReorderItems={(items) => handleReorderItems(sections[5].id, items)}
-            defaultColor={defaultItemColor}
-            hideAddButton={hideAddButton}
-            sectionTitleColor={sectionTitleColor}
-          />
-        </div>
+          {/* Col 2 bottom: 7. Key Resources */}
+          <div className={`col-span-1 min-h-[200px] ${hideAddButton ? "col-start-2 row-start-2 min-h-[130px]" : "md:col-start-2 md:row-start-2 md:min-h-[250px]"}`}>
+            <BMCSection
+              title={sections[5].title}
+              icon={sections[5].icon}
+              items={data[sections[5].id] || []}
+              onAddItem={() => handleAddItem(sections[5].id, sections[5].title)}
+              onEditItem={(item) => handleEditItem(sections[5].id, sections[5].title, item)}
+              onDeleteItem={(id) => handleDeleteItem(sections[5].id, id)}
+              onReorderItems={(items) => handleReorderItems(sections[5].id, items)}
+              defaultColor={defaultItemColor}
+              hideAddButton={hideAddButton}
+              sectionTitleColor={sectionTitleColor}
+            />
+          </div>
 
-        {/* Center tall: 1. Value Proposition (col3, rows 1-2) */}
-        <div className="col-span-1 md:col-start-3 md:row-start-1 md:row-span-2 min-h-[250px] md:min-h-[520px]">
-          <BMCSection
-            title={sections[2].title}
-            icon={sections[2].icon}
-            items={data[sections[2].id] || []}
-            onAddItem={() => handleAddItem(sections[2].id, sections[2].title)}
-            onEditItem={(item) => handleEditItem(sections[2].id, sections[2].title, item)}
-            onDeleteItem={(id) => handleDeleteItem(sections[2].id, id)}
-            onReorderItems={(items) => handleReorderItems(sections[2].id, items)}
-            defaultColor={defaultItemColor}
-            hideAddButton={hideAddButton}
-            sectionTitleColor={sectionTitleColor}
-          />
-        </div>
+          {/* Center tall: 1. Value Proposition (col3, rows 1-2) */}
+          <div className={`col-span-1 min-h-[250px] ${hideAddButton ? "col-start-3 row-start-1 row-span-2 min-h-[280px]" : "md:col-start-3 md:row-start-1 md:row-span-2 md:min-h-[520px]"}`}>
+            <BMCSection
+              title={sections[2].title}
+              icon={sections[2].icon}
+              items={data[sections[2].id] || []}
+              onAddItem={() => handleAddItem(sections[2].id, sections[2].title)}
+              onEditItem={(item) => handleEditItem(sections[2].id, sections[2].title, item)}
+              onDeleteItem={(id) => handleDeleteItem(sections[2].id, id)}
+              onReorderItems={(items) => handleReorderItems(sections[2].id, items)}
+              defaultColor={defaultItemColor}
+              hideAddButton={hideAddButton}
+              sectionTitleColor={sectionTitleColor}
+            />
+          </div>
 
-        {/* Col 4 top: 3. Customer Relationships */}
-        <div className="col-span-1 md:col-start-4 md:row-start-1 min-h-[200px] md:min-h-[250px]">
-          <BMCSection
-            title={sections[3].title}
-            icon={sections[3].icon}
-            items={data[sections[3].id] || []}
-            onAddItem={() => handleAddItem(sections[3].id, sections[3].title)}
-            onEditItem={(item) => handleEditItem(sections[3].id, sections[3].title, item)}
-            onDeleteItem={(id) => handleDeleteItem(sections[3].id, id)}
-            onReorderItems={(items) => handleReorderItems(sections[3].id, items)}
-            defaultColor={defaultItemColor}
-            hideAddButton={hideAddButton}
-            sectionTitleColor={sectionTitleColor}
-          />
-        </div>
+          {/* Col 4 top: 3. Customer Relationships */}
+          <div className={`col-span-1 min-h-[200px] ${hideAddButton ? "col-start-4 row-start-1 min-h-[130px]" : "md:col-start-4 md:row-start-1 md:min-h-[250px]"}`}>
+            <BMCSection
+              title={sections[3].title}
+              icon={sections[3].icon}
+              items={data[sections[3].id] || []}
+              onAddItem={() => handleAddItem(sections[3].id, sections[3].title)}
+              onEditItem={(item) => handleEditItem(sections[3].id, sections[3].title, item)}
+              onDeleteItem={(id) => handleDeleteItem(sections[3].id, id)}
+              onReorderItems={(items) => handleReorderItems(sections[3].id, items)}
+              defaultColor={defaultItemColor}
+              hideAddButton={hideAddButton}
+              sectionTitleColor={sectionTitleColor}
+            />
+          </div>
 
-        {/* Col 4 bottom: 4. Distribution Channels */}
-        <div className="col-span-1 md:col-start-4 md:row-start-2 min-h-[200px] md:min-h-[250px]">
-          <BMCSection
-            title={sections[7].title}
-            icon={sections[7].icon}
-            items={data[sections[7].id] || []}
-            onAddItem={() => handleAddItem(sections[7].id, sections[7].title)}
-            onEditItem={(item) => handleEditItem(sections[7].id, sections[7].title, item)}
-            onDeleteItem={(id) => handleDeleteItem(sections[7].id, id)}
-            onReorderItems={(items) => handleReorderItems(sections[7].id, items)}
-            defaultColor={defaultItemColor}
-            hideAddButton={hideAddButton}
-            sectionTitleColor={sectionTitleColor}
-          />
-        </div>
+          {/* Col 4 bottom: 4. Distribution Channels */}
+          <div className={`col-span-1 min-h-[200px] ${hideAddButton ? "col-start-4 row-start-2 min-h-[130px]" : "md:col-start-4 md:row-start-2 md:min-h-[250px]"}`}>
+            <BMCSection
+              title={sections[7].title}
+              icon={sections[7].icon}
+              items={data[sections[7].id] || []}
+              onAddItem={() => handleAddItem(sections[7].id, sections[7].title)}
+              onEditItem={(item) => handleEditItem(sections[7].id, sections[7].title, item)}
+              onDeleteItem={(id) => handleDeleteItem(sections[7].id, id)}
+              onReorderItems={(items) => handleReorderItems(sections[7].id, items)}
+              defaultColor={defaultItemColor}
+              hideAddButton={hideAddButton}
+              sectionTitleColor={sectionTitleColor}
+            />
+          </div>
 
-        {/* Right tall: 2. Customers (col5, rows 1-2) */}
-        <div className="col-span-1 md:col-start-5 md:row-start-1 md:row-span-2 min-h-[250px] md:min-h-[520px]">
-          <BMCSection
-            title={sections[4].title}
-            icon={sections[4].icon}
-            items={data[sections[4].id] || []}
-            onAddItem={() => handleAddItem(sections[4].id, sections[4].title)}
-            onEditItem={(item) => handleEditItem(sections[4].id, sections[4].title, item)}
-            onDeleteItem={(id) => handleDeleteItem(sections[4].id, id)}
-            onReorderItems={(items) => handleReorderItems(sections[4].id, items)}
-            defaultColor={defaultItemColor}
-            hideAddButton={hideAddButton}
-            sectionTitleColor={sectionTitleColor}
-          />
-        </div>
+          {/* Right tall: 2. Customers (col5, rows 1-2) */}
+          <div className={`col-span-1 min-h-[250px] ${hideAddButton ? "col-start-5 row-start-1 row-span-2 min-h-[280px]" : "md:col-start-5 md:row-start-1 md:row-span-2 md:min-h-[520px]"}`}>
+            <BMCSection
+              title={sections[4].title}
+              icon={sections[4].icon}
+              items={data[sections[4].id] || []}
+              onAddItem={() => handleAddItem(sections[4].id, sections[4].title)}
+              onEditItem={(item) => handleEditItem(sections[4].id, sections[4].title, item)}
+              onDeleteItem={(id) => handleDeleteItem(sections[4].id, id)}
+              onReorderItems={(items) => handleReorderItems(sections[4].id, items)}
+              defaultColor={defaultItemColor}
+              hideAddButton={hideAddButton}
+              sectionTitleColor={sectionTitleColor}
+            />
+          </div>
 
-        {/* Bottom left: 8. Budget Cost (col1-2) */}
-        <div className="col-span-1 md:col-span-2 md:col-start-1 md:row-start-3 min-h-[160px] md:min-h-[200px]">
-          <BMCSection
-            title={sections[6].title}
-            icon={sections[6].icon}
-            items={data[sections[6].id] || []}
-            onAddItem={() => handleAddItem(sections[6].id, sections[6].title)}
-            onEditItem={(item) => handleEditItem(sections[6].id, sections[6].title, item)}
-            onDeleteItem={(id) => handleDeleteItem(sections[6].id, id)}
-            onReorderItems={(items) => handleReorderItems(sections[6].id, items)}
-            defaultColor={defaultItemColor}
-            hideAddButton={hideAddButton}
-            sectionTitleColor={sectionTitleColor}
-          />
-        </div>
+          {/* Bottom left: 8. Budget Cost (col1-2) */}
+          <div className={`col-span-1 min-h-[160px] ${hideAddButton ? "col-span-2 col-start-1 row-start-3 min-h-[100px]" : "md:col-span-2 md:col-start-1 md:row-start-3 md:min-h-[200px]"}`}>
+            <BMCSection
+              title={sections[6].title}
+              icon={sections[6].icon}
+              items={data[sections[6].id] || []}
+              onAddItem={() => handleAddItem(sections[6].id, sections[6].title)}
+              onEditItem={(item) => handleEditItem(sections[6].id, sections[6].title, item)}
+              onDeleteItem={(id) => handleDeleteItem(sections[6].id, id)}
+              onReorderItems={(items) => handleReorderItems(sections[6].id, items)}
+              defaultColor={defaultItemColor}
+              hideAddButton={hideAddButton}
+              sectionTitleColor={sectionTitleColor}
+            />
+          </div>
 
-        {/* Bottom right: 9. Revenue Streams (col3-5) */}
-        <div className="col-span-1 md:col-span-3 md:col-start-3 md:row-start-3 min-h-[160px] md:min-h-[200px]">
-          <BMCSection
-            title={sections[8].title}
-            icon={sections[8].icon}
-            items={data[sections[8].id] || []}
-            onAddItem={() => handleAddItem(sections[8].id, sections[8].title)}
-            onEditItem={(item) => handleEditItem(sections[8].id, sections[8].title, item)}
-            onDeleteItem={(id) => handleDeleteItem(sections[8].id, id)}
-            onReorderItems={(items) => handleReorderItems(sections[8].id, items)}
-            defaultColor={defaultItemColor}
-            hideAddButton={hideAddButton}
-            sectionTitleColor={sectionTitleColor}
-          />
+          {/* Bottom right: 9. Revenue Streams (col3-5) */}
+          <div className={`col-span-1 min-h-[160px] ${hideAddButton ? "col-span-3 col-start-3 row-start-3 min-h-[100px]" : "md:col-span-3 md:col-start-3 md:row-start-3 md:min-h-[200px]"}`}>
+            <BMCSection
+              title={sections[8].title}
+              icon={sections[8].icon}
+              items={data[sections[8].id] || []}
+              onAddItem={() => handleAddItem(sections[8].id, sections[8].title)}
+              onEditItem={(item) => handleEditItem(sections[8].id, sections[8].title, item)}
+              onDeleteItem={(id) => handleDeleteItem(sections[8].id, id)}
+              onReorderItems={(items) => handleReorderItems(sections[8].id, items)}
+              defaultColor={defaultItemColor}
+              hideAddButton={hideAddButton}
+              sectionTitleColor={sectionTitleColor}
+            />
+          </div>
         </div>
       </div>
 

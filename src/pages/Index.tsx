@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { BMCCanvas } from "@/components/BMCCanvas";
+import { ImportDialog } from "@/components/ImportDialog";
 import { Toolbar } from "@/components/Toolbar";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -20,17 +21,49 @@ import {
 
 const Index = () => {
   const { t } = useI18n();
-  const [bmcData, setBmcData] = useState({});
-  const [canvasTitle, setCanvasTitle] = useState<string>(t("clickToEditTitle"));
-  const [canvasColor, setCanvasColor] = useState("#f5f3ed");
-  const [defaultItemColor, setDefaultItemColor] = useState("#4285F4");
-  const [defaultTextColor, setDefaultTextColor] = useState("#000000");
-  const [titleColor, setTitleColor] = useState<string>("#1f2937");
-  const [sectionTitleColor, setSectionTitleColor] = useState<string>("#374151");
+
+  // Try to load draft from localStorage if not loading a shared URL
+  const draftData = (() => {
+    const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    if (params.get("bmc")) return null;
+    try {
+      const draft = localStorage.getItem("bmc_draft");
+      return draft ? JSON.parse(draft) : null;
+    } catch (e) {
+      return null;
+    }
+  })();
+
+  const [bmcData, setBmcData] = useState(draftData?.data || {});
+  const [canvasTitle, setCanvasTitle] = useState<string>(draftData?.title || "");
+  const [canvasColor, setCanvasColor] = useState(draftData?.canvasColor || "#f5f3ed");
+  const [defaultItemColor, setDefaultItemColor] = useState(draftData?.defaultItemColor || "#4285F4");
+  const [defaultTextColor, setDefaultTextColor] = useState(draftData?.defaultTextColor || "#000000");
+  const [titleColor, setTitleColor] = useState<string>(draftData?.titleColor || "#1f2937");
+  const [sectionTitleColor, setSectionTitleColor] = useState<string>(draftData?.sectionTitleColor || "#374151");
   const [hideAddButton, setHideAddButton] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const [showUpdatePopup, setShowUpdatePopup] = useState(false);
-  
+  const [isImportOpen, setIsImportOpen] = useState(false);
+
+  // Save draft to localStorage whenever relevant state changes
+  useEffect(() => {
+    try {
+      const draft = {
+        data: bmcData,
+        title: canvasTitle,
+        canvasColor,
+        defaultItemColor,
+        defaultTextColor,
+        titleColor,
+        sectionTitleColor
+      };
+      localStorage.setItem("bmc_draft", JSON.stringify(draft));
+    } catch (e) {
+      console.error("Failed to save draft to localStorage", e);
+    }
+  }, [bmcData, canvasTitle, canvasColor, defaultItemColor, defaultTextColor, titleColor, sectionTitleColor]);
+
   // AlertDialog state management
   const [alertConfig, setAlertConfig] = useState<{
     open: boolean;
@@ -231,31 +264,7 @@ const Index = () => {
         }
         return; // stop: we loaded from shared link
       }
-      // No shared link — warn user that data will not be persisted when leaving
-      try {
-        // show a one-time alert informing users that the site doesn't persist data
-        // use a browser alert for simplicity; translation key below
-
-
-
-
-
-
-
-
-
-
-
-        window.onbeforeunload = () => t("noPersistenceWarning");
-
-
-
-
-
-        
-      } catch (err) {
-        // ignore
-      }
+      // Draft is autosaved to localStorage
     } catch (e) {
       // ignore
     }
@@ -351,24 +360,34 @@ const Index = () => {
     // Wait for state to update
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    const targetEl = canvasRef.current;
-    await waitForRender(targetEl);
+    try {
+      const targetEl = canvasRef.current;
+      await waitForRender(targetEl);
 
-    const isMobile = window.innerWidth < 1024;
-    const canvas = await html2canvas(targetEl, {
-      scale: 2,
-      windowWidth: isMobile ? 1200 : undefined,
-      backgroundColor: canvasColor,
-    });
+      const canvas = await html2canvas(targetEl, {
+        scale: 2,
+        windowWidth: 1400,
+        backgroundColor: canvasColor,
+      });
 
-    const imgData = canvas.toDataURL("image/png");
-    canvas.toBlob((blob) => {
-      if (blob) {
-        downloadFile(blob, "bmc-canvas.pdf", t("canvasExportedPDF") || "Canvas exported as PDF");
-      }
-    });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "px",
+        format: [canvas.width, canvas.height]
+      });
 
-    setHideAddButton(false);
+      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+      const pdfBlob = pdf.output("blob");
+      
+      downloadFile(pdfBlob, "bmc-canvas.pdf", t("canvasExportedPDF") || "Canvas exported as PDF");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to generate PDF");
+    } finally {
+      setHideAddButton(false);
+      toast.dismiss(loadingId);
+    }
   };
 
   const handleExportPNG = async () => {
@@ -380,22 +399,33 @@ const Index = () => {
     // Wait for state to update
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    const targetEl = canvasRef.current;
-    await waitForRender(targetEl);
+    try {
+      const targetEl = canvasRef.current;
+      await waitForRender(targetEl);
 
-    const isMobile = window.innerWidth < 1024;
-    const canvas = await html2canvas(targetEl, {
-      scale: 2,
-      windowWidth: isMobile ? 1200 : undefined,
-      backgroundColor: canvasColor,
-    });
+      const canvas = await html2canvas(targetEl, {
+        scale: 2,
+        windowWidth: 1400,
+        backgroundColor: canvasColor,
+      });
 
-    canvas.toBlob((blob) => {
-      if (blob) {
-        downloadFile(blob, "bmc-canvas.png", t("canvasExportedPNG") || "Canvas exported as PNG");
-        setHideAddButton(false);
-      }
-    });
+      await new Promise<void>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            downloadFile(blob, "bmc-canvas.png", t("canvasExportedPNG") || "Canvas exported as PNG");
+            resolve();
+          } else {
+            reject(new Error("Failed to generate PNG blob"));
+          }
+        });
+      });
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to generate PNG");
+    } finally {
+      setHideAddButton(false);
+      toast.dismiss(loadingId);
+    }
   };
 
   return (
@@ -410,7 +440,7 @@ const Index = () => {
 
         <Toolbar
           onExportJSON={handleExportJSON}
-          onImportJSON={handleImportJSON}
+          onImportClick={() => setIsImportOpen(true)}
           onShareLink={handleShareLink}
           onExportPDF={handleExportPDF}
           onExportPNG={handleExportPNG}
@@ -445,19 +475,39 @@ const Index = () => {
             variant="destructive"
             size="sm"
             onClick={() => {
-              const url = `${window.location.origin}`;
-              window.location.href = url;
-              // No local autosave to clear; data is not persisted across sessions
-              toast.success(t("canvasCleared"));
+              showAlert({
+                title: t("clear") || "Clear Canvas",
+                description: t("confirmDelete") || "Are you sure you want to clear the canvas?",
+                actionLabel: t("clear") || "Clear",
+                onAction: () => {
+                  setBmcData({});
+                  setCanvasTitle("");
+                  try {
+                    localStorage.removeItem("bmc_draft");
+                  } catch (e) {}
+                  const params = new URLSearchParams(window.location.search);
+                  if (params.get("bmc")) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                  }
+                  toast.success(t("canvasCleared"));
+                }
+              });
             }}
           >
             {t("clear")}
           </Button>
         </div>
 
-        <div className="rounded-[2.5rem] overflow-hidden">
+        <div 
+          ref={canvasRef}
+          className={`rounded-[2.5rem] transition-all duration-100 ${hideAddButton ? "shadow-[0_12px_40px_rgba(0,0,0,0.08)]" : "overflow-hidden"}`}
+          style={{
+            padding: hideAddButton ? "24px" : "0px",
+            width: hideAddButton ? "1400px" : "100%",
+            backgroundColor: hideAddButton ? canvasColor : "transparent"
+          }}
+        >
           <BMCCanvas
-            innerRef={canvasRef}
             data={bmcData}
             onDataChange={setBmcData}
             canvasColor={canvasColor}
@@ -548,6 +598,7 @@ const Index = () => {
           </div>
         </AlertDialogContent>
       </AlertDialog>
+      <ImportDialog open={isImportOpen} onClose={() => setIsImportOpen(false)} onImport={handleImportJSON} />
     </div>
   );
 };
